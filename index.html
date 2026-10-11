@@ -76,11 +76,19 @@
 
       <label>Тип об’єкта</label>
       <select id="autoType">
-        <option value="drone">БпЛА</option>
+        <option value="drone_attack">Ударний БпЛА</option>
+        <option value="drone_fast">Швидкісний БпЛА</option>
+        <option value="drone_decoy">БпЛА-приманка</option>
+        <option value="drone_recon">Розвідувальний БпЛА</option>
         <option value="cruise">Крилата ракета</option>
         <option value="ballistic">Балістична ракета</option>
         <option value="aircraft">Літак-носій</option>
       </select>
+
+      <div id="autoInfo" class="auto-info">
+        <b>Навчальні параметри</b>
+        <span>Дальність: умовна • Швидкість: симуляційна</span>
+      </div>
 
       <label>Умовний сектор старту</label>
       <select id="autoSector">
