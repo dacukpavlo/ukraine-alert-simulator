@@ -13,3 +13,10 @@ button{border:0;border-radius:9px;min-height:44px;padding:9px;font-weight:800;cu
 .fx-red{animation:redzone .9s infinite alternate}.fx-yellow{animation:yellowzone 1s infinite alternate}@keyframes redzone{from{fill-opacity:.22}to{fill-opacity:.46}}@keyframes yellowzone{from{fill-opacity:.18}to{fill-opacity:.38}}
 #activeList{display:grid;gap:8px}.active-item{background:#0d141c;border-radius:9px;padding:10px;border-left:4px solid var(--red)}.active-item.drone{border-left-color:var(--yellow)}
 @media(max-width:850px){html,body{overflow:auto}.app{display:block;height:auto}.panel{width:100%;height:auto}.map-area{height:68vh;min-height:500px}}
+.support-card{border-color:#315f93;background:linear-gradient(180deg,#192633,#17202a)}
+.support-text{font-size:13px;line-height:1.45;color:#d6dde6}
+.mono-btn{display:block;text-align:center;text-decoration:none;background:#111;color:#fff;border:1px solid #49515a;border-radius:10px;padding:12px 10px;font-weight:800;margin:10px 0}
+.mono-btn:hover{filter:brightness(1.12)}
+.card-number{display:grid;gap:4px;background:#0c1219;border:1px solid #3b4754;border-radius:9px;padding:10px;margin-top:8px}
+.card-number span{font-size:11px;color:var(--muted)}
+.card-number b{font-size:16px;letter-spacing:.4px}
