@@ -78,12 +78,15 @@ const trainingSectors={
   southeast:{name:'Південно-східний сектор',lat:46.5,lng:42.5}
 };
 const trainingTypes={
-  drone:{label:'БпЛА',symbol:'◆',alertKind:'drone',className:'sim-drone'},
-  cruise:{label:'Крилата ракета',symbol:'➤',alertKind:'missile',className:'sim-missile'},
-  ballistic:{label:'Балістична ракета',symbol:'▲',alertKind:'missile',className:'sim-missile'},
-  aircraft:{label:'Літак-носій',symbol:'✈',alertKind:'air',className:'sim-aircraft'}
+  drone_attack:{label:'Ударний БпЛА',symbol:'✦',alertKind:'drone',className:'sim-drone',range:'довга'},
+  drone_fast:{label:'Швидкісний БпЛА',symbol:'◆',alertKind:'drone',className:'sim-drone-fast',range:'середня'},
+  drone_decoy:{label:'БпЛА-приманка',symbol:'◇',alertKind:'drone',className:'sim-drone-decoy',range:'середня'},
+  drone_recon:{label:'Розвідувальний БпЛА',symbol:'⌁',alertKind:'drone',className:'sim-drone-recon',range:'середня'},
+  cruise:{label:'Крилата ракета',symbol:'➤',alertKind:'missile',className:'sim-missile',range:'довга'},
+  ballistic:{label:'Балістична ракета',symbol:'▲',alertKind:'missile',className:'sim-ballistic',range:'середня'},
+  aircraft:{label:'Літак-носій',symbol:'✈',alertKind:'air',className:'sim-aircraft',range:'умовна'}
 };
-const trainingDurations={slow:45000,normal:28000,fast:16000};
+const trainingDurations={slow:14000,normal:11000,fast:8500};
 
 let autoMarker=null,autoOriginMarker=null,autoTrail=null,autoTimer=null,autoAlertTriggered=false;
 
@@ -168,19 +171,23 @@ function startAutoScenario(){
     map.fitBounds(L.latLngBounds([origin,target]),{padding:[40,40],animate:false});
   }catch(e){}
 
-  setAutoStatus(`${cfg.label}: рух із «${sector.name}» до ${selected.name}`,'running');
+  setAutoStatus(`${cfg.label}: рух із «${sector.name}» до ${selected.name}. Тривога через 4–6 с.`,'running');
+  const info=document.getElementById('autoInfo');
+  if(info)info.innerHTML=`<b>${cfg.label}</b><span>Умовна дальність: ${cfg.range} • Реальні ТТХ не використовуються</span>`;
 
   const started=performance.now();
+  const alertDelay=4000+Math.random()*2000;
   autoTimer=setInterval(()=>{
-    const p=Math.min((performance.now()-started)/duration,1);
+    const elapsed=performance.now()-started;
+    const p=Math.min(elapsed/duration,1);
     const lat=origin[0]+(target[0]-origin[0])*p;
     const lng=origin[1]+(target[1]-origin[1])*p;
 
     if(autoMarker)autoMarker.setLatLng([lat,lng]);
     if(autoTrail)autoTrail.addLatLng([lat,lng]);
 
-    // The alert threshold is intentionally simulation-only, not based on real weapon range.
-    if(p>=0.55&&!autoAlertTriggered)triggerTrainingAlert(cfg);
+    // Trigger is intentionally simulation-only: 4–6 seconds after launch.
+    if(elapsed>=alertDelay&&!autoAlertTriggered)triggerTrainingAlert(cfg);
 
     if(p>=1){
       clearInterval(autoTimer);
