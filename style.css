@@ -416,3 +416,19 @@ button:hover{
   from{transform:scale(.95)}
   to{transform:scale(1.05)}
 }
+
+.auto-info{
+  display:grid;
+  gap:3px;
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:9px;
+  background:rgba(8,14,20,.72);
+  border:1px solid rgba(124,151,178,.18);
+}
+.auto-info b{font-size:12px;color:#e8f1fa}
+.auto-info span{font-size:11px;color:#91a4b7}
+.sim-drone-fast{background:#c99d00;color:#121212;box-shadow:0 0 0 6px rgba(255,210,31,.18),0 5px 16px rgba(0,0,0,.38)}
+.sim-drone-decoy{background:#887526;color:#fff;box-shadow:0 0 0 6px rgba(255,210,31,.10),0 5px 16px rgba(0,0,0,.38)}
+.sim-drone-recon{background:#4f6c7f;color:#fff;box-shadow:0 0 0 6px rgba(120,170,200,.12),0 5px 16px rgba(0,0,0,.38)}
+.sim-ballistic{background:#b8202c;color:#fff;box-shadow:0 0 0 7px rgba(239,51,64,.16),0 5px 18px rgba(0,0,0,.42)}
