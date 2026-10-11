@@ -68,3 +68,127 @@ document.getElementById('stopAllBtn').onclick=()=>{const ks=Object.keys(activeAl
 function renderActive(){const b=document.getElementById('activeList'),es=Object.entries(activeAlerts);if(!es.length){b.textContent='Немає активних загроз.';return}b.innerHTML=es.map(([k,a])=>`<div class="active-item ${a.kind==='drone'?'drone':''}"><b>${esc(a.place.name)}</b><br>${kindLabel(a.kind)}<br><button data-k="${esc(k)}">Відбій</button></div>`).join('');b.querySelectorAll('button').forEach(x=>x.onclick=()=>stopOne(x.dataset.k,true))}
 for(const [k,a] of Object.entries(activeAlerts)){refreshMarker(k,a.place);addZone(k,a)}renderActive();
 window.addEventListener('load',()=>setTimeout(()=>map.invalidateSize(false),100));
+
+/* ===== Safe automatic training scenario =====
+   Uses fictional sectors and simulation speeds only.
+   It does NOT represent real launch sites, weapon performance or combat routes. */
+const trainingSectors={
+  north:{name:'Північний сектор',lat:54.0,lng:32.0},
+  east:{name:'Східний сектор',lat:50.8,lng:42.8},
+  southeast:{name:'Південно-східний сектор',lat:46.5,lng:42.5}
+};
+const trainingTypes={
+  drone:{label:'БпЛА',symbol:'◆',alertKind:'drone',className:'sim-drone'},
+  cruise:{label:'Крилата ракета',symbol:'➤',alertKind:'missile',className:'sim-missile'},
+  ballistic:{label:'Балістична ракета',symbol:'▲',alertKind:'missile',className:'sim-missile'},
+  aircraft:{label:'Літак-носій',symbol:'✈',alertKind:'air',className:'sim-aircraft'}
+};
+const trainingDurations={slow:45000,normal:28000,fast:16000};
+
+let autoMarker=null,autoOriginMarker=null,autoTrail=null,autoTimer=null,autoAlertTriggered=false;
+
+function trainingIcon(cfg){
+  return L.divIcon({
+    className:'',
+    html:`<div class="sim-object ${cfg.className}"><span>${cfg.symbol}</span></div>`,
+    iconSize:[38,38],
+    iconAnchor:[19,19]
+  });
+}
+function originIcon(){
+  return L.divIcon({
+    className:'',
+    html:'<div class="sim-origin"><span></span></div>',
+    iconSize:[28,28],
+    iconAnchor:[14,14]
+  });
+}
+function setAutoStatus(text,state=''){
+  const el=document.getElementById('autoStatus');
+  if(!el)return;
+  el.className='auto-status'+(state?' '+state:'');
+  el.textContent=text;
+}
+function cleanupAutoLayers(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null}
+  if(autoMarker){map.removeLayer(autoMarker);autoMarker=null}
+  if(autoOriginMarker){map.removeLayer(autoOriginMarker);autoOriginMarker=null}
+  if(autoTrail){map.removeLayer(autoTrail);autoTrail=null}
+}
+function stopAutoScenario(){
+  cleanupAutoLayers();
+  autoAlertTriggered=false;
+  setAutoStatus('Сценарій зупинено');
+}
+function triggerTrainingAlert(cfg){
+  if(!selected||autoAlertTriggered)return;
+  autoAlertTriggered=true;
+  const k=keyOf(selected);
+  const kind=cfg.alertKind;
+  removeZone(k);
+  activeAlerts[k]={place:selected,kind,scope:'place',time:new Date().toISOString(),source:'training'};
+  save();
+  refreshMarker(k,selected);
+  addZone(k,activeAlerts[k]);
+  playThreat(kind);
+  showBanner(activeAlerts[k]);
+  setAutoStatus('Об’єкт увійшов в умовну зону — тривогу ввімкнено','warning');
+}
+function startAutoScenario(){
+  if(!selected){
+    alert('Спочатку знайди і вибери місто або населений пункт.');
+    return;
+  }
+
+  cleanupAutoLayers();
+  autoAlertTriggered=false;
+
+  const sector=trainingSectors[document.getElementById('autoSector').value];
+  const cfg=trainingTypes[document.getElementById('autoType').value];
+  const duration=trainingDurations[document.getElementById('autoSpeed').value]||trainingDurations.normal;
+  const origin=[sector.lat,sector.lng];
+  const target=[selected.lat,selected.lng];
+
+  autoOriginMarker=L.marker(origin,{icon:originIcon(),zIndexOffset:700})
+    .addTo(map)
+    .bindPopup(`<b>${sector.name}</b><br>Умовна навчальна точка старту`);
+
+  autoMarker=L.marker(origin,{icon:trainingIcon(cfg),zIndexOffset:1200})
+    .addTo(map)
+    .bindPopup(`<b>${cfg.label}</b><br>Навчальний сценарій`);
+
+  autoTrail=L.polyline([origin],{
+    color:cfg.alertKind==='drone'?'#ffd21f':'#ef3340',
+    weight:3,
+    opacity:.82,
+    dashArray:'8 9'
+  }).addTo(map);
+
+  try{
+    map.fitBounds(L.latLngBounds([origin,target]),{padding:[40,40],animate:false});
+  }catch(e){}
+
+  setAutoStatus(`${cfg.label}: рух із «${sector.name}» до ${selected.name}`,'running');
+
+  const started=performance.now();
+  autoTimer=setInterval(()=>{
+    const p=Math.min((performance.now()-started)/duration,1);
+    const lat=origin[0]+(target[0]-origin[0])*p;
+    const lng=origin[1]+(target[1]-origin[1])*p;
+
+    if(autoMarker)autoMarker.setLatLng([lat,lng]);
+    if(autoTrail)autoTrail.addLatLng([lat,lng]);
+
+    // The alert threshold is intentionally simulation-only, not based on real weapon range.
+    if(p>=0.55&&!autoAlertTriggered)triggerTrainingAlert(cfg);
+
+    if(p>=1){
+      clearInterval(autoTimer);
+      autoTimer=null;
+      setAutoStatus('Сценарій завершено. Тривога залишається активною до відбою.','done');
+    }
+  },100);
+}
+
+document.getElementById('autoStartBtn')?.addEventListener('click',startAutoScenario);
+document.getElementById('autoStopBtn')?.addEventListener('click',stopAutoScenario);
