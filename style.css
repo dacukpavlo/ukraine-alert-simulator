@@ -20,3 +20,6 @@ button{border:0;border-radius:9px;min-height:44px;padding:9px;font-weight:800;cu
 .card-number{display:grid;gap:4px;background:#0c1219;border:1px solid #3b4754;border-radius:9px;padding:10px;margin-top:8px}
 .card-number span{font-size:11px;color:var(--muted)}
 .card-number b{font-size:16px;letter-spacing:.4px}
+
+.telegram-btn{display:block;text-align:center;text-decoration:none;background:#229ED9;color:#fff;border-radius:10px;padding:12px 10px;font-weight:800;margin:10px 0}
+.telegram-btn:hover{filter:brightness(1.08)}
