@@ -66,6 +66,44 @@
       <button id="stopAllBtn" class="stop-all">Відбій усіх</button>
     </section>
 
+
+    <section class="card auto-card">
+      <div class="card-title-row">
+        <h2>Автоматичний сценарій</h2>
+        <span class="training-pill">ТРЕНУВАЛЬНИЙ</span>
+      </div>
+      <p class="small auto-note">Умовні точки та швидкості. Не відображає реальні бойові маршрути.</p>
+
+      <label>Тип об’єкта</label>
+      <select id="autoType">
+        <option value="drone">БпЛА</option>
+        <option value="cruise">Крилата ракета</option>
+        <option value="ballistic">Балістична ракета</option>
+        <option value="aircraft">Літак-носій</option>
+      </select>
+
+      <label>Умовний сектор старту</label>
+      <select id="autoSector">
+        <option value="north">Північний сектор</option>
+        <option value="east">Східний сектор</option>
+        <option value="southeast">Південно-східний сектор</option>
+      </select>
+
+      <label>Швидкість симуляції</label>
+      <select id="autoSpeed">
+        <option value="slow">Повільна</option>
+        <option value="normal" selected>Середня</option>
+        <option value="fast">Швидка</option>
+      </select>
+
+      <div class="buttons">
+        <button id="autoStartBtn" class="auto-start">Запустити авто-загрозу</button>
+        <button id="autoStopBtn" class="auto-stop">Зупинити</button>
+      </div>
+      <div id="autoStatus" class="auto-status">Очікує запуску</div>
+    </section>
+
+
     <section class="card">
       <h2>Активні загрози</h2>
       <div id="activeList">Немає активних загроз.</div>
