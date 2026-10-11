@@ -23,3 +23,58 @@ button{border:0;border-radius:9px;min-height:44px;padding:9px;font-weight:800;cu
 
 .telegram-btn{display:block;text-align:center;text-decoration:none;background:#229ED9;color:#fff;border-radius:10px;padding:12px 10px;font-weight:800;margin:10px 0}
 .telegram-btn:hover{filter:brightness(1.08)}
+
+/* Support block moved below the map */
+.map-area{
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+  background:var(--bg);
+}
+#map{
+  position:relative;
+  inset:auto;
+  flex:1 1 auto;
+  min-height:0;
+  width:100%;
+}
+.map-support-wrap{
+  flex:0 0 auto;
+  padding:10px 14px 14px;
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  z-index:950;
+}
+.map-support-wrap .support-card{
+  margin:0;
+  max-width:none;
+}
+.map-support-wrap .support-text{
+  margin:7px 0;
+}
+.map-support-wrap .mono-btn,
+.map-support-wrap .telegram-btn{
+  display:inline-block;
+  width:auto;
+  margin:6px 8px 6px 0;
+  padding:10px 14px;
+}
+.map-support-wrap .card-number{
+  display:inline-grid;
+  vertical-align:middle;
+  min-width:250px;
+  margin:6px 8px 6px 0;
+}
+@media(max-width:850px){
+  .map-area{height:auto}
+  #map{height:62vh;min-height:460px;flex:none}
+  .map-support-wrap{padding:10px}
+  .map-support-wrap .mono-btn,
+  .map-support-wrap .telegram-btn,
+  .map-support-wrap .card-number{
+    display:block;
+    width:100%;
+    min-width:0;
+    margin:8px 0;
+  }
+}
