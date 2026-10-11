@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Карта тривог України — симулятор</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="panel">
+    <h1>Карта тривог</h1>
+    <div class="badge">РУЧНА СИМУЛЯЦІЯ</div>
+    <p class="muted">Неофіційна демонстраційна карта. Тривоги запускаються вручну.</p>
+
+    <section class="card">
+      <h2>Знайти місце</h2>
+      <div class="search-row">
+        <input id="placeSearch" placeholder="Місто, село або район">
+        <button id="searchBtn">Знайти</button>
+      </div>
+      <div id="searchStatus" class="small">Введи назву і натисни «Знайти»</div>
+      <div id="suggestions" class="suggestions hidden"></div>
+      <div id="selectedPlace" class="selected">Місце ще не вибрано</div>
+    </section>
+
+    <section class="card">
+      <h2>Загроза</h2>
+      <select id="threatSelect">
+        <option value="air">Повітряна тривога</option>
+        <option value="drone">Загроза БпЛА / Shahed</option>
+        <option value="missile">Ракетна загроза</option>
+        <option value="strike">Загроза ракетного удару</option>
+      </select>
+
+      <label>Масштаб</label>
+      <select id="scopeSelect">
+        <option value="place">Місто / район</option>
+        <option value="wide">Велика зона</option>
+        <option value="country">Вся Україна</option>
+      </select>
+
+      <label>Гучність: <b id="volumeValue">100%</b></label>
+      <input id="volumeRange" type="range" min="0" max="100" value="100">
+
+      <div class="buttons">
+        <button id="startBtn" class="danger">Запустити</button>
+        <button id="stopBtn" class="safe">Відбій тут</button>
+      </div>
+      <button id="stopAllBtn" class="stop-all">Відбій усіх</button>
+    </section>
+
+    <section class="card">
+      <h2>Активні загрози</h2>
+      <div id="activeList">Немає активних загроз.</div>
+    </section>
+  </aside>
+
+  <main class="map-area">
+    <div id="map"></div>
+    <div id="banner" class="banner hidden"></div>
+    <div class="note">Симулятор — не офіційне оповіщення</div>
+  </main>
+</div>
+
+<audio id="airSound" src="audio/air_alert.mp3" preload="auto"></audio>
+<audio id="droneSound" src="audio/drone_alert.mp3" preload="auto"></audio>
+<audio id="allClearSound" src="audio/all_clear.mp3" preload="auto"></audio>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
