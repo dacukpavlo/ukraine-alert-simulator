@@ -3,16 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Карта тривог України — симулятор</title>
+  <title>UA Alert Map — карта загроз України</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<header class="site-header">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"><span></span></div>
+    <div class="brand-copy">
+      <div class="brand-title">UA ALERT MAP</div>
+      <div class="brand-subtitle">Інтерактивна карта загроз України</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="header-chip"><span class="header-dot"></span> Україна</div>
+    <a class="header-support" href="#support">Підтримати сайт</a>
+  </div>
+</header>
+
 <div class="app">
   <aside class="panel">
-    <h1>Карта тривог</h1>
-    <div class="badge">РУЧНА СИМУЛЯЦІЯ</div>
-    <p class="muted">Неофіційна демонстраційна карта. Тривоги запускаються вручну.</p>
+    <div class="panel-heading">
+      <span>Керування картою</span>
+      <small>Знайдіть населений пункт і виберіть тип загрози</small>
+    </div>
 
     <section class="card">
       <h2>Знайти місце</h2>
@@ -62,7 +77,7 @@
     <div id="map"></div>
     <div id="banner" class="banner hidden"></div>
     <div class="note">Симулятор — не офіційне оповіщення</div>
-    <div class="map-support-wrap">
+    <div class="map-support-wrap" id="support">
       <section class="card support-card">
       <h2>Підтримати сайт 💙</h2>
       <p class="support-text">Якщо вам подобається сайт і хочете підтримати його розвиток — можете залишити невеликий донат.</p>
