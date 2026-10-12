@@ -108,8 +108,13 @@ async function searchAdminBoundary(name,context='',mode='place'){
   }catch(e){ return null; }
 }
 async function resolveBoundary(p,scope){
-  if(scope==='country') return null;
-  const key=scope+':'+(p.osm_type||'')+':'+(p.osm_id||p.name||p.display);
+  const key=scope+':'+(p?.osm_type||'')+':'+(p?.osm_id||p?.name||p?.display||'ukraine');
+  if(scope==='country'){
+    if(boundaryCache.has(key)) return boundaryCache.get(key);
+    const boundary=await searchAdminBoundary('Україна','','country');
+    boundaryCache.set(key,boundary);
+    return boundary;
+  }
   if(boundaryCache.has(key)) return boundaryCache.get(key);
 
   let boundary=null;
@@ -130,14 +135,22 @@ function removeZone(k){if(zones[k]){map.removeLayer(zones[k]);delete zones[k]}}
 function addZone(k,a){
   const color=colorFor(a.kind),cls=a.kind==='drone'?'fx-yellow':'fx-red';
 
+  const boundary=a.boundary || (a.scope==='place' && polygonGeometry(a.place.geojson) ? a.place.geojson : null);
+
   if(a.scope==='country'){
-    zones[k]=L.rectangle([[44.2,22.0],[52.5,40.3]],{
-      color,weight:2,fillColor:color,fillOpacity:.28,className:cls
+    if(!boundary){ zones[k]=null; return; }
+    zones[k]=L.geoJSON(boundary,{
+      style:{
+        color,
+        weight:3,
+        opacity:1,
+        fillColor:color,
+        fillOpacity:.30,
+        className:cls
+      }
     }).addTo(map);
     return;
   }
-
-  const boundary=a.boundary || (a.scope==='place' && polygonGeometry(a.place.geojson) ? a.place.geojson : null);
   if(boundary){
     zones[k]=L.geoJSON(boundary,{
       style:{
@@ -183,10 +196,12 @@ async function startAlert(){
   try{
     const boundary=await resolveBoundary(selected,scope);
 
-    if(scope!=='country' && !boundary){
-      alert(scope==='wide'
-        ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
-        : 'Не вдалося знайти точну адміністративну межу цього міста або району. Спробуй інший результат у пошуку.');
+    if(!boundary){
+      alert(scope==='country'
+        ? 'Не вдалося завантажити точний державний кордон України. Онови сторінку й спробуй ще раз.'
+        : scope==='wide'
+          ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
+          : 'Не вдалося знайти точну адміністративну межу цього міста або району. Спробуй інший результат у пошуку.');
       return;
     }
 
@@ -198,8 +213,9 @@ async function startAlert(){
     playThreat(kind);
     showBanner(activeAlerts[k]);
 
-    if(scope==='country'){
-      map.setView([49.1,31.2],6,{animate:false});
+    if(scope==='country' && zones[k] && typeof zones[k].getBounds==='function'){
+      try{map.fitBounds(zones[k].getBounds(),{padding:[18,18],animate:false,maxZoom:7})}
+      catch(e){map.setView([49.1,31.2],6,{animate:false})}
     }else if(zones[k] && typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[28,28],animate:false,maxZoom:11})}
       catch(e){map.setView([selected.lat,selected.lng],9,{animate:false})}
@@ -218,9 +234,7 @@ function renderActive(){const b=document.getElementById('activeList'),es=Object.
 async function restoreActiveAlerts(){
   for(const [k,a] of Object.entries(activeAlerts)){
     refreshMarker(k,a.place);
-    if(a.scope!=='country'){
-      a.boundary=await resolveBoundary(a.place,a.scope);
-    }
+    a.boundary=await resolveBoundary(a.place,a.scope);
     addZone(k,a);
   }
   renderActive();
