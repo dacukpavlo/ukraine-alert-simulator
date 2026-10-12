@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dacukpavlo.github.io/ukraine-alert-simulator/sitemap.xml
