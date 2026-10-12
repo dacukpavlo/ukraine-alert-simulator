@@ -18,10 +18,10 @@ async function runSearch(){
   document.getElementById('searchStatus').textContent='Пошук…';
   try{
     const u=new URL('https://nominatim.openstreetmap.org/search');
-    u.searchParams.set('format','jsonv2');u.searchParams.set('q',q+', Україна');u.searchParams.set('countrycodes','ua');u.searchParams.set('addressdetails','1');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk');
+    u.searchParams.set('format','jsonv2');u.searchParams.set('q',q+', Україна');u.searchParams.set('countrycodes','ua');u.searchParams.set('addressdetails','1');u.searchParams.set('polygon_geojson','1');u.searchParams.set('polygon_threshold','0.002');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk');
     const r=await fetch(u);if(!r.ok)throw new Error();
     const d=await r.json();
-    searchResults=d.map(x=>({name:(x.namedetails&&x.namedetails.name)||x.display_name.split(',')[0],display:x.display_name,lat:+x.lat,lng:+x.lon,osm_type:x.osm_type,osm_id:x.osm_id,bbox:x.boundingbox?.map(Number)}));
+    searchResults=d.map(x=>({name:(x.namedetails&&x.namedetails.name)||x.display_name.split(',')[0],display:x.display_name,lat:+x.lat,lng:+x.lon,osm_type:x.osm_type,osm_id:x.osm_id,bbox:x.boundingbox?.map(Number),geojson:x.geojson||null,type:x.type||'',class:x.class||''}));
     renderSuggestions();document.getElementById('searchStatus').textContent=searchResults.length?`Знайдено: ${searchResults.length}`:'Нічого не знайдено';
   }catch(e){document.getElementById('searchStatus').textContent='Пошук тимчасово недоступний'}
 }
@@ -44,12 +44,41 @@ document.getElementById('volumeRange').oninput=e=>document.getElementById('volum
 function removeZone(k){if(zones[k]){map.removeLayer(zones[k]);delete zones[k]}}
 function addZone(k,a){
   const color=colorFor(a.kind),cls=a.kind==='drone'?'fx-yellow':'fx-red';
-  if(a.scope==='country') zones[k]=L.rectangle([[44.2,22.0],[52.5,40.3]],{color,weight:2,fillColor:color,fillOpacity:.28,className:cls}).addTo(map);
-  else {
-    let d=a.scope==='wide'?1.05:.22;
-    if(a.place.bbox&&a.scope==='place'){const b=a.place.bbox;zones[k]=L.rectangle([[b[0],b[2]],[b[1],b[3]]],{color,weight:3,fillColor:color,fillOpacity:.3,className:cls}).addTo(map)}
-    else zones[k]=L.rectangle([[a.place.lat-d,a.place.lng-d],[a.place.lat+d,a.place.lng+d]],{color,weight:3,fillColor:color,fillOpacity:.3,className:cls}).addTo(map)
+
+  if(a.scope==='country'){
+    zones[k]=L.rectangle([[44.2,22.0],[52.5,40.3]],{
+      color,weight:2,fillColor:color,fillOpacity:.28,className:cls
+    }).addTo(map);
+    return;
   }
+
+  // For city/district alerts, use the real OSM administrative boundary when available.
+  if(a.scope==='place' && a.place.geojson &&
+     (a.place.geojson.type==='Polygon' || a.place.geojson.type==='MultiPolygon')){
+    zones[k]=L.geoJSON(a.place.geojson,{
+      style:{
+        color,
+        weight:3,
+        opacity:.95,
+        fillColor:color,
+        fillOpacity:.28,
+        className:cls
+      }
+    }).addTo(map);
+    return;
+  }
+
+  // If OSM has no polygon for a small settlement, use a soft circle instead of a rectangle.
+  const radius=a.scope==='wide'?85000:12000;
+  zones[k]=L.circle([a.place.lat,a.place.lng],{
+    radius,
+    color,
+    weight:3,
+    opacity:.9,
+    fillColor:color,
+    fillOpacity:.23,
+    className:cls
+  }).addTo(map);
 }
 function save(){localStorage.setItem('uaAlertSim',JSON.stringify(activeAlerts));renderActive()}
 function showBanner(a){const b=document.getElementById('banner');b.className='banner '+(a.kind==='drone'?'yellow':'red');b.textContent=kindLabel(a.kind)+' — '+(a.scope==='country'?'Україна':a.place.name);setTimeout(()=>b.classList.add('hidden'),5000)}
@@ -58,7 +87,14 @@ function startAlert(){
   if(!selected){alert('Спочатку знайди і вибери місце.');return}
   const k=keyOf(selected),kind=document.getElementById('threatSelect').value,scope=document.getElementById('scopeSelect').value;
   removeZone(k);activeAlerts[k]={place:selected,kind,scope,time:new Date().toISOString()};save();refreshMarker(k,selected);addZone(k,activeAlerts[k]);playThreat(kind);showBanner(activeAlerts[k]);
-  if(scope==='country')map.setView([49.1,31.2],6,{animate:false});else map.setView([selected.lat,selected.lng],scope==='wide'?7:10,{animate:false});
+  if(scope==='country'){
+    map.setView([49.1,31.2],6,{animate:false});
+  }else if(scope==='place' && zones[k] && typeof zones[k].getBounds==='function'){
+    try{ map.fitBounds(zones[k].getBounds(),{padding:[28,28],animate:false,maxZoom:11}); }
+    catch(e){ map.setView([selected.lat,selected.lng],10,{animate:false}); }
+  }else{
+    map.setView([selected.lat,selected.lng],scope==='wide'?7:10,{animate:false});
+  }
 }
 function stopOne(k,play=true){const a=activeAlerts[k];if(!a)return;delete activeAlerts[k];removeZone(k);refreshMarker(k,a.place);save();if(play)playClear()}
 document.getElementById('startBtn').onclick=startAlert;
