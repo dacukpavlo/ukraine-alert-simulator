@@ -305,3 +305,14 @@ button:hover{
   .map-area{height:auto}
 }
 
+
+.brand-title{margin:0}
+.seo-footer{
+  margin-top:10px;
+  padding:9px 2px 0;
+  color:#7f91a4;
+  font-size:11px;
+  line-height:1.45;
+  border-top:1px solid rgba(124,151,178,.12);
+}
+.seo-footer strong{color:#a9b9c9}
