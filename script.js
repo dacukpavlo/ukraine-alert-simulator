@@ -1,6 +1,11 @@
 const map=L.map('map',{zoomControl:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView([49.1,31.2],6);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,minZoom:4,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
+const uaAlertBoundaryVersion='2026-10-12-border-v3';
+if(localStorage.getItem('uaAlertBoundaryVersion')!==uaAlertBoundaryVersion){
+  localStorage.removeItem('uaAlertSim');
+  localStorage.setItem('uaAlertBoundaryVersion',uaAlertBoundaryVersion);
+}
 let selected=null,searchResults=[],activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
@@ -77,6 +82,28 @@ async function fetchSelectedBoundary(p){
     return polygonGeometry(d?.[0]?.geojson)?d[0].geojson:null;
   }catch(e){ return null; }
 }
+async function fetchUkraineBoundaryExact(){
+  const cacheKey='country:osm:R60199';
+  if(boundaryCache.has(cacheKey)) return boundaryCache.get(cacheKey);
+  try{
+    const u=new URL('https://nominatim.openstreetmap.org/lookup');
+    u.searchParams.set('format','jsonv2');
+    u.searchParams.set('osm_ids','R60199');
+    u.searchParams.set('polygon_geojson','1');
+    u.searchParams.set('addressdetails','1');
+    u.searchParams.set('accept-language','uk');
+    const r=await fetch(u);
+    if(!r.ok) return null;
+    const d=await r.json();
+    const g=d?.[0]?.geojson;
+    const boundary=polygonGeometry(g)?g:null;
+    boundaryCache.set(cacheKey,boundary);
+    return boundary;
+  }catch(e){
+    return null;
+  }
+}
+
 async function searchAdminBoundary(name,context='',mode='place'){
   if(!name) return null;
   try{
@@ -110,10 +137,7 @@ async function searchAdminBoundary(name,context='',mode='place'){
 async function resolveBoundary(p,scope){
   const key=scope+':'+(p?.osm_type||'')+':'+(p?.osm_id||p?.name||p?.display||'ukraine');
   if(scope==='country'){
-    if(boundaryCache.has(key)) return boundaryCache.get(key);
-    const boundary=await searchAdminBoundary('Україна','','country');
-    boundaryCache.set(key,boundary);
-    return boundary;
+    return await fetchUkraineBoundaryExact();
   }
   if(boundaryCache.has(key)) return boundaryCache.get(key);
 
