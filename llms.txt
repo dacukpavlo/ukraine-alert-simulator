@@ -1,0 +1,23 @@
+# UA Alert Map
+
+> UA Alert Map is a Ukrainian-language interactive online simulator of air-raid alerts and threat notifications in Ukraine.
+
+Canonical URL: https://dacukpavlo.github.io/ukraine-alert-simulator/
+
+## Main topics
+- карта тривог України
+- симулятор тривоги України
+- онлайн карта тривог
+- симулятор карти тривог
+- повітряна тривога
+- дронова загроза
+- ракетна загроза
+
+## What the site does
+Users can search for a city, district or region in Ukraine, choose a threat type, and simulate alert highlighting and sounds. The site is a simulator and is not an official emergency alert service.
+
+## Language
+Primary language: Ukrainian (uk)
+
+## Important
+This is a public simulation website, not an official government warning system.
