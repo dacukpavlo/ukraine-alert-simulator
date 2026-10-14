@@ -87,6 +87,53 @@ function selectPlace(p){selected=p;document.getElementById('selectedPlace').inne
 document.getElementById('searchBtn').onclick=runSearch;
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch()}});
 
+async function selectFromMap(lat,lng){
+  const status=document.getElementById('searchStatus');
+  status.textContent='Визначаю місце на карті…';
+  try{
+    const u=new URL('https://nominatim.openstreetmap.org/reverse');
+    u.searchParams.set('format','jsonv2');
+    u.searchParams.set('lat',lat);
+    u.searchParams.set('lon',lng);
+    u.searchParams.set('zoom','10');
+    u.searchParams.set('addressdetails','1');
+    u.searchParams.set('namedetails','1');
+    u.searchParams.set('accept-language','uk,en');
+    const r=await fetch(u);
+    if(!r.ok)throw new Error();
+    const x=await r.json();
+
+    const code=(x.address?.country_code||'').toLowerCase();
+    if(geoMode==='ukraine' && code!=='ua'){
+      status.textContent='У режимі «Україна» можна вибирати тільки територію України';
+      return;
+    }
+
+    const p={
+      name:(x.namedetails&&x.namedetails.name)||x.name||x.display_name?.split(',')[0]||'Вибране місце',
+      display:x.display_name||'',
+      lat:+x.lat,
+      lng:+x.lon,
+      osm_type:x.osm_type,
+      osm_id:x.osm_id,
+      bbox:x.boundingbox?.map(Number),
+      geojson:x.geojson||null,
+      type:x.type||'',
+      class:x.class||'',
+      addresstype:x.addresstype||'',
+      address:x.address||{}
+    };
+    selectPlace(p);
+    status.textContent='Місце вибрано з карти';
+  }catch(e){
+    status.textContent='Не вдалося визначити місце. Спробуй пошук за назвою';
+  }
+}
+
+map.on('click',e=>{
+  selectFromMap(e.latlng.lat,e.latlng.lng);
+});
+
 function volume(){return +document.getElementById('volumeRange').value/100}
 function stopAudio(){['airSound','droneSound','allClearSound'].forEach(id=>{const a=document.getElementById(id);a.pause();a.currentTime=0})}
 function playThreat(k){stopAudio();const a=document.getElementById(k==='drone'?'droneSound':'airSound');a.volume=volume();a.play().catch(()=>{})}
@@ -292,7 +339,9 @@ async function startAlert(){
           ? 'Не вдалося завантажити точний державний кордон України. Онови сторінку й спробуй ще раз.'
           : 'Не вдалося завантажити точний кордон вибраної країни. Вибери місто або країну ще раз.')
         : scope==='wide'
-          ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
+          ? (geoMode==='ukraine'
+            ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
+            : 'Не вдалося знайти точну межу регіону або штату. Спробуй вибрати інший результат пошуку.')
           : 'Не вдалося знайти точну адміністративну межу цього міста або району. Спробуй інший результат у пошуку.');
       return;
     }
@@ -307,7 +356,7 @@ async function startAlert(){
 
     if(scope==='country' && zones[k] && typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[18,18],animate:false,maxZoom:7})}
-      catch(e){map.setView([49.1,31.2],6,{animate:false})}
+      catch(e){map.setView([selected.lat,selected.lng],scope==='country'?5:9,{animate:false})}
     }else if(zones[k] && typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[28,28],animate:false,maxZoom:11})}
       catch(e){map.setView([selected.lat,selected.lng],9,{animate:false})}
