@@ -48,7 +48,7 @@
   }
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=20261012-4">
+  <link rel="stylesheet" href="style.css?v=20261014-1">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -139,6 +139,11 @@
     <div id="banner" class="banner hidden"></div>
     <div class="note">Симулятор — не офіційне оповіщення</div>
     <div class="map-support-wrap" id="support">
+      <button class="support-toggle" id="supportToggle" type="button" aria-expanded="false" aria-controls="supportContent">
+        <span>💙 Підтримати сайт</span>
+        <span class="support-toggle-hint">Відкрити</span>
+      </button>
+      <div class="support-content" id="supportContent">
       <section class="card support-card">
       <h2>Підтримати сайт 💙</h2>
       <p class="support-text">Якщо вам подобається сайт і хочете підтримати його розвиток — можете залишити невеликий донат.</p>
@@ -152,6 +157,7 @@
       <footer class="seo-footer">
         <strong>UA Alert Map</strong> — онлайн-симулятор карти тривог України. На сайті можна вибрати місто, район, область або всю Україну та змоделювати різні типи тривог і звукових оповіщень.
       </footer>
+      </div>
     </div>
   </main>
 </div>
@@ -161,6 +167,6 @@
 <audio id="allClearSound" src="audio/all_clear.mp3" preload="auto"></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261012-3"></script>
+<script src="script.js?v=20261014-1"></script>
 </body>
 </html>
