@@ -9,50 +9,6 @@ if(localStorage.getItem('uaAlertBoundaryVersion')!==uaAlertBoundaryVersion){
 let selected=null,searchResults=[],activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
-const geoUkraine=document.getElementById('geoUkraine');
-const geoWorld=document.getElementById('geoWorld');
-const scopeSelect=document.getElementById('scopeSelect');
-let geoMode=localStorage.getItem('uaAlertGeoMode')||'ukraine';
-
-function countryNameOf(p){
-  const a=p?.address||{};
-  return a.country || (p?.addresstype==='country'?p.name:'') || '';
-}
-function applyGeoMode(mode,resetView=true){
-  geoMode=mode==='world'?'world':'ukraine';
-  localStorage.setItem('uaAlertGeoMode',geoMode);
-
-  geoUkraine?.classList.toggle('active',geoMode==='ukraine');
-  geoWorld?.classList.toggle('active',geoMode==='world');
-  geoUkraine?.setAttribute('aria-pressed',String(geoMode==='ukraine'));
-  geoWorld?.setAttribute('aria-pressed',String(geoMode==='world'));
-
-  selected=null;
-  searchResults=[];
-  searchInput.value='';
-  document.getElementById('suggestions')?.classList.add('hidden');
-  document.getElementById('selectedPlace').textContent='Місце ще не вибрано';
-
-  if(geoMode==='ukraine'){
-    searchInput.placeholder='Місто, село або район';
-    document.getElementById('searchStatus').textContent='Пошук тільки по Україні';
-    scopeSelect.options[0].text='Місто / район';
-    scopeSelect.options[1].text='Вся область';
-    scopeSelect.options[2].text='Вся Україна';
-    document.querySelector('.header-chip').innerHTML='<span class="header-dot"></span> Україна';
-    if(resetView)map.setView([49.1,31.2],6,{animate:false});
-  }else{
-    searchInput.placeholder='Місто, село, район або країна';
-    document.getElementById('searchStatus').textContent='Пошук по всьому світу';
-    scopeSelect.options[0].text='Місто / район';
-    scopeSelect.options[1].text='Весь регіон / штат';
-    scopeSelect.options[2].text='Вся країна';
-    document.querySelector('.header-chip').innerHTML='<span class="header-dot"></span> Весь світ';
-    if(resetView)map.setView([20,0],2,{animate:false});
-  }
-}
-geoUkraine?.addEventListener('click',()=>applyGeoMode('ukraine'));
-geoWorld?.addEventListener('click',()=>applyGeoMode('world'));
 
 function kindLabel(k){return {air:'Повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару'}[k]||k}
 function colorFor(k){return k==='drone'?'#ffd21f':'#ef3340'}
@@ -67,10 +23,7 @@ async function runSearch(){
   document.getElementById('searchStatus').textContent='Пошук…';
   try{
     const u=new URL('https://nominatim.openstreetmap.org/search');
-    u.searchParams.set('format','jsonv2');
-    u.searchParams.set('q',geoMode==='ukraine'?q+', Україна':q);
-    if(geoMode==='ukraine')u.searchParams.set('countrycodes','ua');
-    u.searchParams.set('addressdetails','1');u.searchParams.set('namedetails','1');u.searchParams.set('polygon_geojson','1');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk,en');
+    u.searchParams.set('format','jsonv2');u.searchParams.set('q',q+', Україна');u.searchParams.set('countrycodes','ua');u.searchParams.set('addressdetails','1');u.searchParams.set('namedetails','1');u.searchParams.set('polygon_geojson','1');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk');
     const r=await fetch(u);if(!r.ok)throw new Error();
     const d=await r.json();
     searchResults=d.map(x=>({name:(x.namedetails&&x.namedetails.name)||x.display_name.split(',')[0],display:x.display_name,lat:+x.lat,lng:+x.lon,osm_type:x.osm_type,osm_id:x.osm_id,bbox:x.boundingbox?.map(Number),geojson:x.geojson||null,type:x.type||'',class:x.class||'',addresstype:x.addresstype||'',address:x.address||{}}));
@@ -86,53 +39,6 @@ function renderSuggestions(){
 function selectPlace(p){selected=p;document.getElementById('selectedPlace').innerHTML=`<b>${esc(p.name)}</b><br><small>${esc(p.display)}</small>`;document.getElementById('suggestions').classList.add('hidden');map.setView([p.lat,p.lng],10,{animate:false})}
 document.getElementById('searchBtn').onclick=runSearch;
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch()}});
-
-async function selectFromMap(lat,lng){
-  const status=document.getElementById('searchStatus');
-  status.textContent='Визначаю місце на карті…';
-  try{
-    const u=new URL('https://nominatim.openstreetmap.org/reverse');
-    u.searchParams.set('format','jsonv2');
-    u.searchParams.set('lat',lat);
-    u.searchParams.set('lon',lng);
-    u.searchParams.set('zoom','10');
-    u.searchParams.set('addressdetails','1');
-    u.searchParams.set('namedetails','1');
-    u.searchParams.set('accept-language','uk,en');
-    const r=await fetch(u);
-    if(!r.ok)throw new Error();
-    const x=await r.json();
-
-    const code=(x.address?.country_code||'').toLowerCase();
-    if(geoMode==='ukraine' && code!=='ua'){
-      status.textContent='У режимі «Україна» можна вибирати тільки територію України';
-      return;
-    }
-
-    const p={
-      name:(x.namedetails&&x.namedetails.name)||x.name||x.display_name?.split(',')[0]||'Вибране місце',
-      display:x.display_name||'',
-      lat:+x.lat,
-      lng:+x.lon,
-      osm_type:x.osm_type,
-      osm_id:x.osm_id,
-      bbox:x.boundingbox?.map(Number),
-      geojson:x.geojson||null,
-      type:x.type||'',
-      class:x.class||'',
-      addresstype:x.addresstype||'',
-      address:x.address||{}
-    };
-    selectPlace(p);
-    status.textContent='Місце вибрано з карти';
-  }catch(e){
-    status.textContent='Не вдалося визначити місце. Спробуй пошук за назвою';
-  }
-}
-
-map.on('click',e=>{
-  selectFromMap(e.latlng.lat,e.latlng.lng);
-});
 
 function volume(){return +document.getElementById('volumeRange').value/100}
 function stopAudio(){['airSound','droneSound','allClearSound'].forEach(id=>{const a=document.getElementById(id);a.pause();a.currentTime=0})}
@@ -198,29 +104,13 @@ async function fetchUkraineBoundaryExact(){
   }
 }
 
-async function fetchCountryBoundary(p){
-  const country=countryNameOf(p);
-  if(!country)return null;
-  if(normalizeName(country)==='україна' || normalizeName(country)==='ukraine'){
-    return await fetchUkraineBoundaryExact();
-  }
-  const cacheKey='country:'+normalizeName(country);
-  if(boundaryCache.has(cacheKey))return boundaryCache.get(cacheKey);
-  const boundary=await searchAdminBoundary(country,'','country',country);
-  boundaryCache.set(cacheKey,boundary);
-  return boundary;
-}
-
-async function searchAdminBoundary(name,context='',mode='place',country=''){
+async function searchAdminBoundary(name,context='',mode='place'){
   if(!name) return null;
   try{
     const u=new URL('https://nominatim.openstreetmap.org/search');
     u.searchParams.set('format','jsonv2');
-    const locationParts=[name,context];
-    if(country && normalizeName(country)!==normalizeName(name))locationParts.push(country);
-    if(!country && geoMode==='ukraine')locationParts.push('Україна');
-    u.searchParams.set('q',locationParts.filter(Boolean).join(', '));
-    if(geoMode==='ukraine')u.searchParams.set('countrycodes','ua');
+    u.searchParams.set('q',[name,context,'Україна'].filter(Boolean).join(', '));
+    u.searchParams.set('countrycodes','ua');
     u.searchParams.set('addressdetails','1');
     u.searchParams.set('namedetails','1');
     u.searchParams.set('polygon_geojson','1');
@@ -244,13 +134,10 @@ async function searchAdminBoundary(name,context='',mode='place',country=''){
     return polys[0]?.geojson||null;
   }catch(e){ return null; }
 }
-async function resolveBoundary(p,scope,alertGeoMode=geoMode){
-  const country=countryNameOf(p);
-  const key=alertGeoMode+':'+scope+':'+(p?.osm_type||'')+':'+(p?.osm_id||p?.name||p?.display||country||'unknown');
-
+async function resolveBoundary(p,scope){
+  const key=scope+':'+(p?.osm_type||'')+':'+(p?.osm_id||p?.name||p?.display||'ukraine');
   if(scope==='country'){
-    if(alertGeoMode==='ukraine')return await fetchUkraineBoundaryExact();
-    return await fetchCountryBoundary(p);
+    return await fetchUkraineBoundaryExact();
   }
   if(boundaryCache.has(key)) return boundaryCache.get(key);
 
@@ -258,10 +145,10 @@ async function resolveBoundary(p,scope,alertGeoMode=geoMode){
   const region=regionNameOf(p);
 
   if(scope==='wide'){
-    if(region) boundary=await searchAdminBoundary(region,'','wide',country);
+    if(region) boundary=await searchAdminBoundary(region,'','wide');
   }else{
     boundary=await fetchSelectedBoundary(p);
-    if(!boundary) boundary=await searchAdminBoundary(p.name,region,'place',country);
+    if(!boundary) boundary=await searchAdminBoundary(p.name,region,'place');
   }
 
   boundaryCache.set(key,boundary);
@@ -316,7 +203,7 @@ function save(){
   localStorage.setItem('uaAlertSim',JSON.stringify(clean));
   renderActive();
 }
-function showBanner(a){const b=document.getElementById('banner');b.className='banner '+(a.kind==='drone'?'yellow':'red');b.textContent=kindLabel(a.kind)+' — '+(a.scope==='country'?(a.countryName||countryNameOf(a.place)||'Країна'):a.place.name);setTimeout(()=>b.classList.add('hidden'),5000)}
+function showBanner(a){const b=document.getElementById('banner');b.className='banner '+(a.kind==='drone'?'yellow':'red');b.textContent=kindLabel(a.kind)+' — '+(a.scope==='country'?'Україна':a.place.name);setTimeout(()=>b.classList.add('hidden'),5000)}
 function refreshMarker(k,p){if(!markers[k])markers[k]=L.marker([p.lat,p.lng],{icon:safeIcon()}).addTo(map);const a=activeAlerts[k];markers[k].setIcon(a?alertIcon(a.kind):safeIcon());markers[k].bindPopup(`<b>${esc(p.name)}</b><br>${a?kindLabel(a.kind):'Немає ручної загрози'}`)}
 async function startAlert(){
   if(!selected){alert('Спочатку знайди і вибери місце.');return}
@@ -331,23 +218,19 @@ async function startAlert(){
   btn.textContent=scope==='country'?'Запуск…':'Завантаження межі…';
 
   try{
-    const boundary=await resolveBoundary(selected,scope,geoMode);
+    const boundary=await resolveBoundary(selected,scope);
 
     if(!boundary){
       alert(scope==='country'
-        ? (geoMode==='ukraine'
-          ? 'Не вдалося завантажити точний державний кордон України. Онови сторінку й спробуй ще раз.'
-          : 'Не вдалося завантажити точний кордон вибраної країни. Вибери місто або країну ще раз.')
+        ? 'Не вдалося завантажити точний державний кордон України. Онови сторінку й спробуй ще раз.'
         : scope==='wide'
-          ? (geoMode==='ukraine'
-            ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
-            : 'Не вдалося знайти точну межу регіону або штату. Спробуй вибрати інший результат пошуку.')
+          ? 'Не вдалося знайти точну межу області. Спробуй вибрати місто/район ще раз.'
           : 'Не вдалося знайти точну адміністративну межу цього міста або району. Спробуй інший результат у пошуку.');
       return;
     }
 
     removeZone(k);
-    activeAlerts[k]={place:selected,kind,scope,time:new Date().toISOString(),boundary,geoMode,countryName:countryNameOf(selected)};
+    activeAlerts[k]={place:selected,kind,scope,time:new Date().toISOString(),boundary};
     save();
     refreshMarker(k,selected);
     addZone(k,activeAlerts[k]);
@@ -356,7 +239,7 @@ async function startAlert(){
 
     if(scope==='country' && zones[k] && typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[18,18],animate:false,maxZoom:7})}
-      catch(e){map.setView([selected.lat,selected.lng],scope==='country'?5:9,{animate:false})}
+      catch(e){map.setView([49.1,31.2],6,{animate:false})}
     }else if(zones[k] && typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[28,28],animate:false,maxZoom:11})}
       catch(e){map.setView([selected.lat,selected.lng],9,{animate:false})}
@@ -375,12 +258,11 @@ function renderActive(){const b=document.getElementById('activeList'),es=Object.
 async function restoreActiveAlerts(){
   for(const [k,a] of Object.entries(activeAlerts)){
     refreshMarker(k,a.place);
-    a.boundary=await resolveBoundary(a.place,a.scope,a.geoMode||'ukraine');
+    a.boundary=await resolveBoundary(a.place,a.scope);
     addZone(k,a);
   }
   renderActive();
 }
-applyGeoMode(geoMode,false);
 restoreActiveAlerts();
 window.addEventListener('load',()=>setTimeout(()=>map.invalidateSize(false),100));
 
