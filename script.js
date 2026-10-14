@@ -266,3 +266,40 @@ async function restoreActiveAlerts(){
 restoreActiveAlerts();
 window.addEventListener('load',()=>setTimeout(()=>map.invalidateSize(false),100));
 
+
+
+/* Compact donation panel on desktop */
+const supportWrap=document.getElementById('support');
+const supportToggle=document.getElementById('supportToggle');
+const headerSupport=document.querySelector('.header-support');
+
+function setSupportOpen(open){
+  if(!supportWrap||!supportToggle)return;
+  supportWrap.classList.toggle('open',open);
+  supportToggle.setAttribute('aria-expanded',String(open));
+  setTimeout(()=>map.invalidateSize(false),260);
+}
+
+supportToggle?.addEventListener('click',()=>{
+  setSupportOpen(!supportWrap.classList.contains('open'));
+});
+
+headerSupport?.addEventListener('click',e=>{
+  if(window.innerWidth>850){
+    e.preventDefault();
+    setSupportOpen(true);
+  }
+});
+
+window.addEventListener('resize',()=>{
+  if(window.innerWidth<=850){
+    supportWrap?.classList.add('open');
+  }else if(supportWrap && !supportToggle?.matches(':focus')){
+    supportWrap.classList.remove('open');
+    supportToggle?.setAttribute('aria-expanded','false');
+  }
+});
+
+if(window.innerWidth<=850){
+  supportWrap?.classList.add('open');
+}
