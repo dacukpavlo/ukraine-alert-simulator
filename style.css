@@ -493,3 +493,67 @@ button:hover{
 .search-guide h3{font-size:14px;margin:15px 0 5px;color:#9dc9ff}
 .search-guide p{font-size:12.5px;color:#d1dbe6;margin:7px 0}
 .search-guide a{color:#8cc7ff;text-decoration:underline;text-underline-offset:3px}
+
+/* === Russia: country-wide and multi-alert manual scenarios === */
+.ru-quick{
+  display:block;width:100%;margin-top:12px;padding:13px 10px;
+  border:1px solid #ef8c73;border-radius:12px;
+  background:linear-gradient(130deg,#d22a3c,#a52334);
+  color:#fff;font-size:13px;font-weight:900;cursor:pointer;
+  box-shadow:0 7px 18px rgba(190,38,54,.18);
+}
+.ru-multi-card{
+  border:1px solid rgba(230,179,82,.38);
+  background:linear-gradient(165deg,#2a2b37,#192233);
+}
+.ru-multi-card h2{font-size:17px}
+.ru-multi-card .small{line-height:1.5}
+.ru-multi-card label[for="ruScenarioSearch"]{
+  display:block;font-size:13px;color:#d9e7f8;font-weight:800;margin:13px 0 6px;
+}
+#ruScenarioSearch{display:block;width:100%;min-height:42px;margin:0 0 9px}
+.ru-picker-toolbar{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0}
+.ru-picker-toolbar button{
+  flex:1;min-height:35px;padding:6px 10px;border-radius:8px;
+  border:1px solid #4d6785;background:#1c3149;color:#d5ecff;
+  cursor:pointer;font-size:12px;font-weight:800;
+}
+.ru-picked-count{font-size:12px;color:#cfe4ff;font-weight:800;margin:9px 0}
+.ru-scenario-list{
+  height:auto;max-height:310px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:#456b96 #111a26;
+  border:1px solid #3d5069;border-radius:12px;background:#0d1725;
+  padding:6px 10px 10px;overscroll-behavior:contain;
+}
+.ru-picker-heading{
+  margin:11px 0 8px;padding:4px 0;color:#f8cb6a;font-size:12px;
+  border-bottom:1px solid rgba(153,186,214,.18);
+}
+.ru-option{
+  display:flex;align-items:flex-start;gap:9px;min-height:34px;
+  padding:7px 4px;color:#e1e9f2;line-height:1.35;font-size:12.5px;
+  border-bottom:1px solid rgba(153,186,214,.08);
+  cursor:pointer;
+}
+.ru-option input[type=checkbox]{
+  flex:0 0 17px;width:17px;height:17px;margin:1px 0 0;
+  accent-color:#479dff;cursor:pointer;
+}
+.ru-option span{overflow-wrap:anywhere}
+.ru-option:hover{background:rgba(100,166,239,.08)}
+.ru-batch-buttons{display:grid;gap:8px;margin-top:13px}
+.ru-batch-buttons button{
+  width:100%;min-height:43px;border-radius:10px;color:#fff;
+  font-weight:900;font-size:13px;cursor:pointer;
+}
+.ru-batch-buttons .safe{color:#102918;background:#4bc77c}
+.ru-batch-buttons button:disabled{opacity:.65;cursor:wait}
+.ru-batch-note{margin-top:10px}
+.ru-active-count{font-size:11px;font-weight:800;color:#a7c8ec;margin:3px 0 7px}
+.ru-more-threats{margin:8px 0;border:1px solid #465b70;border-radius:8px;padding:7px}
+.ru-more-threats summary{font-size:12px;color:#9dcbff;cursor:pointer;font-weight:800}
+.ru-more-threats>div{max-height:180px;overflow:auto;font-size:12px;line-height:1.5;padding:7px 0}
+@media(max-width:850px){
+  .ru-scenario-list{max-height:280px}
+  .ru-batch-buttons button{min-height:49px}
+}

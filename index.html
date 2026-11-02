@@ -48,7 +48,7 @@
   }
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=20261102-ru1">
+  <link rel="stylesheet" href="style.css?v=20261102-batch2">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -94,6 +94,7 @@
         <button id="countryRussia" class="country-button" type="button" aria-pressed="false">🇷🇺 Росія · меми</button>
       </div>
       <p class="small" id="countryNotice">В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.</p>
+      <button id="ruAllQuick" class="ru-quick hidden" type="button">🚨 Запустити тривогу по всій Росії</button>
     </section>
 
     <section class="card mode-card" id="ukraineLiveCard">
@@ -144,7 +145,25 @@
     <section class="card meme-info hidden" id="russiaMemeInfo">
       <h2>😂 Мемні повідомлення</h2>
       <p class="small">Російський режим — авторські жарти, а не реальні сповіщення чи факти запусків. Меми натхненні українською реакцією на новини.</p>
-      <p class="small">Теми: «Орєшнік», фольгові шапочки, «бавовна», Щекавиця та динозаври.</p>
+      <p class="small">Доступний 51 сценарій: Бандера, українські гуси, борщ, бавовна, ракети та інші. Сирени й короткі оригінальні мемні звукові ефекти.</p>
+    </section>
+
+    <section class="card ru-multi-card hidden" id="ruMultiCard">
+      <h2>🎭 Одночасні тривоги Росії</h2>
+      <p class="small">Обери кілька сценаріїв: вони з'являться одночасно для вибраного міста, області або всієї Росії. Звукові ефекти відтворюються короткою чергою, щоб карта не зависала.</p>
+      <label for="ruScenarioSearch">Пошук серед 51 сценарію</label>
+      <input id="ruScenarioSearch" type="search" placeholder="Бандера, гуси, химическая…" autocomplete="off">
+      <div class="ru-picker-toolbar">
+        <button id="ruSelectAll" type="button">Вибрати всі</button>
+        <button id="ruClearSelection" type="button">Очистити</button>
+      </div>
+      <p class="ru-picked-count" id="ruSelectedCount" aria-live="polite">Обрано: 0</p>
+      <div class="ru-scenario-list" id="ruScenarioList" role="group" aria-label="Список звичайних і мемних тривог Росії"></div>
+      <div class="ru-batch-buttons">
+        <button id="ruStartSelected" class="danger" type="button">▶ Запустити вибрані одночасно</button>
+        <button id="ruStopSelected" class="safe" type="button">■ Відбій у цій зоні</button>
+      </div>
+      <p class="small ru-batch-note">Для «Вся Росія» обери цей масштаб вище — місто шукати не потрібно. Усі тривоги тут запускаються тільки вручну.</p>
     </section>
 
     <section class="card">
@@ -201,6 +220,6 @@
 <audio id="ruNuclearSound" src="audio/ru-nuclear.ogg" preload="none"></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261102-ru1"></script>
+<script src="script.js?v=20261102-batch2"></script>
 </body>
 </html>
