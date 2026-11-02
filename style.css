@@ -486,3 +486,10 @@ button:hover{
   .country-button{font-size:13px;min-height:46px;padding:8px 4px}
   .country-switch-card{padding:12px}
 }
+
+/* Коротка інформація про карту для відвідувачів і пошуку */
+.search-guide{border-color:#34495e;background:linear-gradient(150deg,#162332,#111a25);line-height:1.55}
+.search-guide h2{font-size:16px;color:#e7f1ff}
+.search-guide h3{font-size:14px;margin:15px 0 5px;color:#9dc9ff}
+.search-guide p{font-size:12.5px;color:#d1dbe6;margin:7px 0}
+.search-guide a{color:#8cc7ff;text-decoration:underline;text-underline-offset:3px}
