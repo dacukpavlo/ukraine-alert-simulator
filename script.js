@@ -1,20 +1,31 @@
 const map=L.map('map',{zoomControl:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView([49.1,31.2],6);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,minZoom:4,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,minZoom:2,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
 const uaAlertBoundaryVersion='2026-10-12-border-v3';
 if(localStorage.getItem('uaAlertBoundaryVersion')!==uaAlertBoundaryVersion){
   localStorage.removeItem('uaAlertSim');
   localStorage.setItem('uaAlertBoundaryVersion',uaAlertBoundaryVersion);
 }
-let selected=null,searchResults=[],activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
+let selected=null,searchResults=[],currentCountry='ua';
+const alertStorageKey=()=>currentCountry==='ru'?'ruMemeAlerts':'uaAlertSim';
+let activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
 
-function kindLabel(k){return {air:'Повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару'}[k]||k}
-function colorFor(k){return k==='drone'?'#ffd21f':'#ef3340'}
+function kindLabel(k){return {air:'Повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару',chemical:'Хімічна небезпека',nuclear:'Ядерна небезпека'}[k]||k}
+function colorFor(k){return k==='drone'?'#ffd21f':k==='chemical'?'#a78bfa':k==='nuclear'?'#fb923c':'#ef3340'}
+const memeCaptions={
+  air:'Бавовняний прогноз: головне не переплутати з погодою ☁️',
+  drone:'Дрон шукає Wi-Fi, а знаходить тільки меми 🛸',
+  missile:'«Орєшнік»? Горішки для білочки закінчилися 🌰',
+  strike:'Ракетний мем: навігатор пропонує повернути до здорового глузду 🧭',
+  chemical:'Хімічний аналіз показав: у повітрі забагато пропаганди 🧪',
+  nuclear:'Щекавиця просить не бронювати місця завчасно ⛰️'
+};
+function memeFor(k,p){return memeCaptions[k]||'Мемний прогноз від українського інтернету.'}
 function safeIcon(){return L.divIcon({className:'',html:'<div class="safe-dot"></div>',iconSize:[18,18],iconAnchor:[9,9]})}
 function alertIcon(k){const c=k==='drone'?'yellow':'red';return L.divIcon({className:'',html:`<div class="alert-dot ${c}"><div class="pulse"></div><div class="core"></div></div>`,iconSize:[32,32],iconAnchor:[16,16]})}
-function keyOf(p){return (p.osm_type||'x')+':'+(p.osm_id||p.lat+','+p.lng)}
+function keyOf(p){return (currentCountry==='ru'?'ru:':'')+(p.osm_type||'x')+':'+(p.osm_id||p.lat+','+p.lng)}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 async function runSearch(){
@@ -23,7 +34,7 @@ async function runSearch(){
   document.getElementById('searchStatus').textContent='Пошук…';
   try{
     const u=new URL('https://nominatim.openstreetmap.org/search');
-    u.searchParams.set('format','jsonv2');u.searchParams.set('q',q+', Україна');u.searchParams.set('countrycodes','ua');u.searchParams.set('addressdetails','1');u.searchParams.set('namedetails','1');u.searchParams.set('polygon_geojson','1');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk');
+    u.searchParams.set('format','jsonv2');u.searchParams.set('q',q+(currentCountry==='ru'?', Россия':', Україна'));u.searchParams.set('countrycodes',currentCountry);u.searchParams.set('addressdetails','1');u.searchParams.set('namedetails','1');u.searchParams.set('polygon_geojson','1');u.searchParams.set('limit','10');u.searchParams.set('accept-language','uk');
     const r=await fetch(u);if(!r.ok)throw new Error();
     const d=await r.json();
     searchResults=d.map(x=>({name:(x.namedetails&&x.namedetails.name)||x.display_name.split(',')[0],display:x.display_name,lat:+x.lat,lng:+x.lon,osm_type:x.osm_type,osm_id:x.osm_id,bbox:x.boundingbox?.map(Number),geojson:x.geojson||null,type:x.type||'',class:x.class||'',addresstype:x.addresstype||'',address:x.address||{}}));
@@ -41,8 +52,14 @@ document.getElementById('searchBtn').onclick=runSearch;
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch()}});
 
 function volume(){return +document.getElementById('volumeRange').value/100}
-function stopAudio(){['airSound','droneSound','allClearSound'].forEach(id=>{const a=document.getElementById(id);a.pause();a.currentTime=0})}
-function playThreat(k){stopAudio();const a=document.getElementById(k==='drone'?'droneSound':'airSound');a.volume=volume();a.play().catch(()=>{})}
+function stopAudio(){['airSound','droneSound','allClearSound','ruAirSound','ruDroneSound','ruMissileSound','ruChemicalSound','ruNuclearSound'].forEach(id=>{const a=document.getElementById(id);if(a){a.pause();a.currentTime=0}})}
+function playThreat(k){
+  stopAudio();
+  const ruSounds={air:'ruAirSound',drone:'ruDroneSound',missile:'ruMissileSound',strike:'ruMissileSound',chemical:'ruChemicalSound',nuclear:'ruNuclearSound'};
+  const id=currentCountry==='ru'?(ruSounds[k]||'ruAirSound'):(k==='drone'?'droneSound':'airSound');
+  const a=document.getElementById(id);
+  if(a){a.volume=volume();a.play().catch(()=>{})}
+}
 function playClear(){stopAudio();const a=document.getElementById('allClearSound');a.volume=volume();a.play().catch(()=>{})}
 document.getElementById('volumeRange').oninput=e=>document.getElementById('volumeValue').textContent=e.target.value+'%';
 
@@ -109,8 +126,8 @@ async function searchAdminBoundary(name,context='',mode='place'){
   try{
     const u=new URL('https://nominatim.openstreetmap.org/search');
     u.searchParams.set('format','jsonv2');
-    u.searchParams.set('q',[name,context,'Україна'].filter(Boolean).join(', '));
-    u.searchParams.set('countrycodes','ua');
+    u.searchParams.set('q',[name,context,currentCountry==='ru'?'Россия':'Україна'].filter(Boolean).join(', '));
+    u.searchParams.set('countrycodes',currentCountry);
     u.searchParams.set('addressdetails','1');
     u.searchParams.set('namedetails','1');
     u.searchParams.set('polygon_geojson','1');
@@ -137,7 +154,7 @@ async function searchAdminBoundary(name,context='',mode='place'){
 async function resolveBoundary(p,scope){
   const key=scope+':'+(p?.osm_type||'')+':'+(p?.osm_id||p?.name||p?.display||'ukraine');
   if(scope==='country'){
-    return await fetchUkraineBoundaryExact();
+    return currentCountry==='ua'?await fetchUkraineBoundaryExact():null;
   }
   if(boundaryCache.has(key)) return boundaryCache.get(key);
 
@@ -157,7 +174,7 @@ async function resolveBoundary(p,scope){
 
 function removeZone(k){if(zones[k]){map.removeLayer(zones[k]);delete zones[k]}}
 function addZone(k,a){
-  const color=colorFor(a.kind),cls=a.kind==='drone'?'fx-yellow':'fx-red';
+  const color=colorFor(a.kind),cls=a.kind==='drone'?'fx-yellow':a.kind==='chemical'?'fx-violet':a.kind==='nuclear'?'fx-orange':'fx-red';
 
   const boundary=a.boundary || (a.scope==='place' && polygonGeometry(a.place.geojson) ? a.place.geojson : null);
 
@@ -200,11 +217,16 @@ function save(){
     clean[k]={...a,place};
     delete clean[k].boundary;
   }
-  localStorage.setItem('uaAlertSim',JSON.stringify(clean));
+  localStorage.setItem(alertStorageKey(),JSON.stringify(clean));
   renderActive();
 }
-function showBanner(a){const b=document.getElementById('banner');b.className='banner '+(a.kind==='drone'?'yellow':'red');b.textContent=kindLabel(a.kind)+' — '+(a.scope==='country'?'Україна':a.place.name);setTimeout(()=>b.classList.add('hidden'),5000)}
-function refreshMarker(k,p){if(!markers[k])markers[k]=L.marker([p.lat,p.lng],{icon:safeIcon()}).addTo(map);const a=activeAlerts[k];markers[k].setIcon(a?alertIcon(a.kind):safeIcon());markers[k].bindPopup(`<b>${esc(p.name)}</b><br>${a?kindLabel(a.kind):'Немає ручної загрози'}`)}
+function showBanner(a){
+  const b=document.getElementById('banner');
+  b.className='banner '+(a.kind==='drone'?'yellow':'red');
+  b.textContent=(currentCountry==='ru'?'😂 Мем • ':'')+kindLabel(a.kind)+' — '+(a.scope==='country'?'Україна':a.place.name)+(currentCountry==='ru'?' · '+memeFor(a.kind,a.place):'');
+  setTimeout(()=>b.classList.add('hidden'),6500);
+}
+function refreshMarker(k,p){if(!markers[k])markers[k]=L.marker([p.lat,p.lng],{icon:safeIcon()}).addTo(map);const a=activeAlerts[k];markers[k].setIcon(a?alertIcon(a.kind):safeIcon());markers[k].bindPopup('<b>'+esc(p.name)+'</b><br>'+(a?kindLabel(a.kind):'Немає ручної загрози')+(a&&currentCountry==='ru'?'<br><small>Мемна карта · не справжня тривога</small><br>'+esc(memeFor(a.kind,p)):'') )}
 async function startAlert(){
   if(!selected){alert('Спочатку знайди і вибери місце.');return}
 
@@ -254,16 +276,56 @@ document.getElementById('startBtn').onclick=startAlert;
 document.getElementById('stopBtn').onclick=()=>{if(selected)stopOne(keyOf(selected),true)};
 document.getElementById('stopAllBtn').onclick=()=>{const ks=Object.keys(activeAlerts);ks.forEach(k=>stopOne(k,false));if(ks.length)playClear()};
 
-function renderActive(){const b=document.getElementById('activeList'),es=Object.entries(activeAlerts);if(!es.length){b.textContent='Немає активних загроз.';return}b.innerHTML=es.map(([k,a])=>`<div class="active-item ${a.kind==='drone'?'drone':''}"><b>${esc(a.place.name)}</b><br>${kindLabel(a.kind)}<br><button data-k="${esc(k)}">Відбій</button></div>`).join('');b.querySelectorAll('button').forEach(x=>x.onclick=()=>stopOne(x.dataset.k,true))}
+function renderActive(){
+  const b=document.getElementById('activeList'),es=Object.entries(activeAlerts);
+  if(!es.length){b.textContent='Немає активних загроз.';return}
+  b.innerHTML=es.map(([k,a])=>'<div class="active-item '+(a.kind==='drone'?'drone':'')+'"><b>'+esc(a.place.name)+'</b><br>'+kindLabel(a.kind)+(currentCountry==='ru'?'<div class="meme-caption">'+esc(memeFor(a.kind,a.place))+'</div>':'')+'<br><button data-k="'+esc(k)+'">Відбій</button></div>').join('');
+  b.querySelectorAll('button').forEach(x=>x.onclick=()=>stopOne(x.dataset.k,true));
+}
 async function restoreActiveAlerts(){
+  const modeAtStart=currentCountry;
   for(const [k,a] of Object.entries(activeAlerts)){
-    refreshMarker(k,a.place);
+    if(currentCountry!==modeAtStart)return;
     a.boundary=await resolveBoundary(a.place,a.scope);
+    if(currentCountry!==modeAtStart)return;
+    refreshMarker(k,a.place);
     addZone(k,a);
   }
-  renderActive();
+  if(currentCountry===modeAtStart)renderActive();
 }
 restoreActiveAlerts();
+
+async function switchCountry(mode){
+  if(mode===currentCountry)return;
+  stopAudio();
+  for(const [k,z] of Object.entries(zones)){if(z&&map.hasLayer(z))map.removeLayer(z);delete zones[k]}
+  for(const [k,m] of Object.entries(markers)){if(m&&map.hasLayer(m))map.removeLayer(m);delete markers[k]}
+  currentCountry=mode;
+  activeAlerts=JSON.parse(localStorage.getItem(alertStorageKey())||'{}');
+  selected=null;searchResults=[];searchInput.value='';
+  document.getElementById('suggestions').classList.add('hidden');
+  document.getElementById('selectedPlace').textContent='Місце ще не вибрано';
+  searchInput.placeholder=mode==='ru'?'Місто, район або область Росії':'Місто, село або район України';
+  document.getElementById('searchStatus').textContent=mode==='ru'?'Шукайте місто, район або область Росії':'Введи назву і натисни «Знайти»';
+  document.getElementById('countryUkraine').classList.toggle('active',mode==='ua');
+  document.getElementById('countryRussia').classList.toggle('active',mode==='ru');
+  document.getElementById('countryUkraine').setAttribute('aria-pressed',String(mode==='ua'));
+  document.getElementById('countryRussia').setAttribute('aria-pressed',String(mode==='ru'));
+  document.getElementById('countryChip').textContent=mode==='ru'?'Росія · меми':'Україна';
+  document.getElementById('countryNotice').textContent=mode==='ru'?'Мемні тривоги, а не справжні повідомлення. Запуск вручну.':'В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.';
+  document.getElementById('ukraineLiveCard').classList.toggle('hidden',mode==='ru');
+  document.getElementById('russiaMemeInfo').classList.toggle('hidden',mode!=='ru');
+  document.getElementById('scopeCountry').hidden=mode==='ru';
+  document.getElementById('scopeCountry').disabled=mode==='ru';
+  if(mode==='ru'&&document.getElementById('scopeSelect').value==='country')document.getElementById('scopeSelect').value='wide';
+  document.getElementById('panelModeTitle').textContent=mode==='ru'?'Мемна карта Росії':'Керування картою';
+  document.getElementById('mapSafetyNote').textContent=mode==='ru'?'Мемна карта · не офіційні тривоги':'Симулятор — не офіційне оповіщення';
+  map.setView(mode==='ru'?[57,65]:[49.1,31.2],mode==='ru'?3:6,{animate:false});
+  await restoreActiveAlerts();
+}
+document.getElementById('countryUkraine').addEventListener('click',()=>switchCountry('ua'));
+document.getElementById('countryRussia').addEventListener('click',()=>switchCountry('ru'));
+
 window.addEventListener('load',()=>setTimeout(()=>map.invalidateSize(false),100));
 
 

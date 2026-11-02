@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Карта тривог України — симулятор онлайн | UA Alert Map</title>
+  <title>UA Alert Map — карта тривог України та мемна карта Росії</title>
   <meta name="description" content="UA Alert Map — онлайн-симулятор карти тривог України. Оберіть місто, район, область або всю Україну, запустіть повітряну, дронову чи ракетну загрозу та звукове оповіщення.">
   <meta name="keywords" content="карта тривог України, симулятор тривоги, симулятор карти тривог, карта повітряних тривог, онлайн карта тривог, UA Alert Map">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -48,7 +48,7 @@
   }
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=20261014-1">
+  <link rel="stylesheet" href="style.css?v=20261102-ru1">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -64,7 +64,7 @@
     <div class="brand-mark" aria-hidden="true"><span></span></div>
     <div class="brand-copy">
       <h1 class="brand-title">UA ALERT MAP</h1>
-      <div class="brand-subtitle">Симулятор карти тривог України онлайн</div>
+      <div class="brand-subtitle">Карта України та мемна карта регіонів Росії</div>
     </div>
   </div>
   <div class="header-actions">
@@ -72,7 +72,7 @@
       <a class="mode-btn active" href="https://dacukpavlo.github.io/ukraine-alert-simulator/" aria-current="page">Ручна симуляція</a>
       <a class="mode-btn live" href="https://map.ukrainealarm.com/" target="_blank" rel="noopener noreferrer">Реальні тривоги ↗</a>
     </nav>
-    <div class="header-chip"><span class="header-dot"></span> Україна</div>
+    <div class="header-chip"><span class="header-dot"></span> <span id="countryChip">Україна</span></div>
     <a class="header-support" href="#support">Підтримати сайт</a>
   </div>
 </header>
@@ -80,11 +80,20 @@
 <div class="app">
   <aside class="panel">
     <div class="panel-heading">
-      <span>Керування картою</span>
+      <span id="panelModeTitle">Керування картою</span>
       <small>Знайдіть населений пункт і виберіть тип загрози</small>
     </div>
 
-    <section class="card mode-card">
+    <section class="card country-switch-card">
+      <h2>Оберіть карту</h2>
+      <div class="country-switch" role="group" aria-label="Країна">
+        <button id="countryUkraine" class="country-button active" type="button" aria-pressed="true">🇺🇦 Україна</button>
+        <button id="countryRussia" class="country-button" type="button" aria-pressed="false">🇷🇺 Росія · меми</button>
+      </div>
+      <p class="small" id="countryNotice">В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.</p>
+    </section>
+
+    <section class="card mode-card" id="ukraineLiveCard">
       <div class="mode-card-title"><span class="manual-dot"></span><b>Зараз: ручна симуляція</b></div>
       <p class="small">Для реального актуального стану тривог використовуйте офіційну карту «Повітряна тривога».</p>
       <a class="official-live-btn" href="https://map.ukrainealarm.com/" target="_blank" rel="noopener noreferrer">Відкрити реальні тривоги</a>
@@ -108,13 +117,15 @@
         <option value="drone">Загроза БпЛА / Shahed</option>
         <option value="missile">Ракетна загроза</option>
         <option value="strike">Загроза ракетного удару</option>
+        <option value="chemical">Хімічна небезпека</option>
+        <option value="nuclear">Ядерна небезпека</option>
       </select>
 
       <label>Масштаб</label>
       <select id="scopeSelect">
         <option value="place">Місто / район</option>
         <option value="wide">Вся область</option>
-        <option value="country">Вся Україна</option>
+        <option value="country" id="scopeCountry">Вся Україна</option>
       </select>
 
       <label>Гучність: <b id="volumeValue">100%</b></label>
@@ -127,6 +138,12 @@
       <button id="stopAllBtn" class="stop-all">Відбій усіх</button>
     </section>
 
+    <section class="card meme-info hidden" id="russiaMemeInfo">
+      <h2>😂 Мемні повідомлення</h2>
+      <p class="small">Російський режим — авторські жарти, а не реальні сповіщення чи факти запусків. Меми натхненні українською реакцією на новини.</p>
+      <p class="small">Теми: «Орєшнік», фольгові шапочки, «бавовна», Щекавиця та динозаври.</p>
+    </section>
+
     <section class="card">
       <h2>Активні загрози</h2>
       <div id="activeList">Немає активних загроз.</div>
@@ -137,7 +154,7 @@
   <main class="map-area">
     <div id="map"></div>
     <div id="banner" class="banner hidden"></div>
-    <div class="note">Симулятор — не офіційне оповіщення</div>
+    <div class="note" id="mapSafetyNote">Симулятор — не офіційне оповіщення</div>
     <div class="map-support-wrap" id="support">
       <button class="support-toggle" id="supportToggle" type="button" aria-expanded="false" aria-controls="supportContent">
         <span>💙 Підтримати сайт</span>
@@ -165,8 +182,13 @@
 <audio id="airSound" src="audio/air_alert.mp3" preload="auto"></audio>
 <audio id="droneSound" src="audio/drone_alert.mp3" preload="auto"></audio>
 <audio id="allClearSound" src="audio/all_clear.mp3" preload="auto"></audio>
+<audio id="ruAirSound" src="audio/ru-air.ogg" preload="none"></audio>
+<audio id="ruDroneSound" src="audio/ru-drone.ogg" preload="none"></audio>
+<audio id="ruMissileSound" src="audio/ru-missile.ogg" preload="none"></audio>
+<audio id="ruChemicalSound" src="audio/ru-chemical.ogg" preload="none"></audio>
+<audio id="ruNuclearSound" src="audio/ru-nuclear.ogg" preload="none"></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261014-1"></script>
+<script src="script.js?v=20261102-ru1"></script>
 </body>
 </html>
