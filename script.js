@@ -116,6 +116,119 @@ function playSyntheticSet(kinds){
     }
   }catch(e){/* Browser may block sound until a user taps the button. */}
 }
+// Prepare audio while the click is still a user gesture. Country boundaries
+// download asynchronously, and many mobile browsers block audio if we wait.
+function primeAlarmAudio(){
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return;
+  try{
+    if(!syntheticContext)syntheticContext=new C();
+    if(syntheticContext.state==='suspended')syntheticContext.resume().catch(()=>{});
+  }catch(e){/* Browsers without Web Audio use the existing recordings. */}
+}
+
+// Cinematic fictional mass-alert sound: distant rumble, eerie rising wail,
+// periodic warning siren and deep impacts. Original Web Audio synthesis,
+// with a gentle master level and fade-out to avoid startling volume spikes.
+function playDreadAlarm(){
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C){const fallback=document.getElementById('ruAirSound');if(fallback){fallback.volume=volume();fallback.play().catch(()=>{})}return}
+  try{
+    primeAlarmAudio();
+    if(!syntheticContext)return;
+    const ctx=syntheticContext;
+    const t0=ctx.currentTime+.04;
+    const duration=9;
+    const volumeLevel=Math.min(.5,Math.max(0,volume()*.5));
+    const master=ctx.createGain();
+    const limiter=ctx.createDynamicsCompressor();
+    limiter.threshold.value=-21;
+    limiter.knee.value=13;
+    limiter.ratio.value=7;
+    limiter.attack.value=.006;
+    limiter.release.value=.24;
+    master.gain.setValueAtTime(0,t0);
+    master.gain.linearRampToValueAtTime(volumeLevel,t0+.65);
+    master.gain.setValueAtTime(volumeLevel,t0+duration-1);
+    master.gain.linearRampToValueAtTime(0,t0+duration);
+    master.connect(limiter);
+    limiter.connect(ctx.destination);
+
+    function eerieTone(type,f0,f1,offset,length,level,attack=.13){
+      const start=t0+offset;
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type=type;
+      osc.frequency.setValueAtTime(f0,start);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(25,f1),start+length);
+      gain.gain.setValueAtTime(0,start);
+      gain.gain.linearRampToValueAtTime(level,start+Math.min(attack,length*.35));
+      gain.gain.setValueAtTime(level,start+Math.max(attack,length-.2));
+      gain.gain.linearRampToValueAtTime(0,start+length);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(start);
+      osc.stop(start+length+.02);
+      syntheticOscillators.push(osc);
+    }
+
+    // Heavy, detuned subterranean drone and an uneasy falling harmony.
+    eerieTone('sawtooth',59,47,0,duration,.19,.8);
+    eerieTone('triangle',83,70,.12,duration-.12,.2,.9);
+    eerieTone('sine',217,146,.7,7.5,.13,.7);
+    eerieTone('sine',228,153,1,7.2,.11,.8);
+
+    // Slow repeating emergency siren, with a rising and falling pitch.
+    for(let i=0;i<8;i++){
+      const start=t0+1.35+i*.84;
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type='sawtooth';
+      osc.frequency.setValueAtTime(320,start);
+      osc.frequency.exponentialRampToValueAtTime(705,start+.38);
+      osc.frequency.exponentialRampToValueAtTime(315,start+.79);
+      gain.gain.setValueAtTime(0,start);
+      gain.gain.linearRampToValueAtTime(.085,start+.13);
+      gain.gain.setValueAtTime(.085,start+.66);
+      gain.gain.linearRampToValueAtTime(0,start+.81);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(start);
+      osc.stop(start+.83);
+      syntheticOscillators.push(osc);
+    }
+
+    // Distant cinematic alarm impacts, softened by an envelope.
+    [0.5,3.1,5.8,7.65].forEach((offset,i)=>{
+      eerieTone('sine',95-i*4,36,offset,1.05,.48,.018);
+      eerieTone('triangle',150,45,offset,.46,.16,.01);
+    });
+
+    // Low filtered wind-like noise for atmosphere, synthesized locally.
+    const noiseLength=Math.round(ctx.sampleRate*1.8);
+    const noise=ctx.createBuffer(1,noiseLength,ctx.sampleRate);
+    const data=noise.getChannelData(0);
+    let previous=0;
+    for(let i=0;i<noiseLength;i++){
+      previous=(previous*.95)+((Math.random()*2-1)*.05);
+      data[i]=previous;
+    }
+    const wind=ctx.createBufferSource();
+    const windFilter=ctx.createBiquadFilter();
+    const windLevel=ctx.createGain();
+    wind.buffer=noise;
+    wind.loop=true;
+    windFilter.type='lowpass';
+    windFilter.frequency.value=690;
+    windLevel.gain.value=.19;
+    wind.connect(windFilter);
+    windFilter.connect(windLevel);
+    windLevel.connect(master);
+    wind.start(t0);
+    wind.stop(t0+duration+.01);
+    syntheticOscillators.push(wind);
+  }catch(e){/* Keep the map usable if the browser blocks generated audio. */}
+}
 function playThreat(k){
   stopAudio();
   const ruSounds={air:'ruAirSound',drone:'ruDroneSound',missile:'ruMissileSound',strike:'ruMissileSound',chemical:'ruChemicalSound',nuclear:'ruNuclearSound'};
@@ -129,6 +242,10 @@ function playThreat(k){
 function playThreatSet(kinds){
   if(kinds.length===1){playThreat(kinds[0]);return}
   stopAudio();
+  if(currentCountry==='ru'&&kinds.length>=7){
+    playDreadAlarm();
+    return;
+  }
   playSyntheticSet(kinds);
 }
 function playClear(){stopAudio();const a=document.getElementById('allClearSound');a.volume=volume();a.play().catch(()=>{})}
@@ -382,6 +499,7 @@ async function startAlert(kindsOverride=null,forcedScope=null){
     ? [...new Set(kindsOverride.filter(x=>currentCountry==='ru' && ruById[x]))]
     : [document.getElementById('threatSelect').value];
   if(!kinds.length){alert('Спочатку вибери хоча б один сценарій.');return}
+  primeAlarmAudio();
   if(currentCountry==='ua'&&kinds.some(k=>ruById[k])){alert('Мемні сценарії доступні лише для карти Росії.');return}
   const kind=kinds[0];
   const k=scope==='country'?(currentCountry+':country'):keyOf(place);
