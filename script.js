@@ -487,6 +487,192 @@ function showBanner(a){
   setTimeout(()=>b.classList.add('hidden'),6500);
 }
 function refreshMarker(k,p){if(!markers[k])markers[k]=L.marker([p.lat,p.lng],{icon:safeIcon()}).addTo(map);const a=activeAlerts[k];markers[k].setIcon(a?alertIcon(a.kind):safeIcon());const kinds=a?.kinds?.length?a.kinds:[a?.kind];markers[k].bindPopup('<b>'+esc(p.name)+'</b><br>'+(a?(kinds.length>1?kinds.length+' активних сценаріїв':esc(kindLabel(a.kind))):'Немає ручної загрози')+(a&&currentCountry==='ru'?'<br><small>Мемна карта · не справжня тривога</small>':'') )}
+// Fictional flight animation assets: OpenMoji 17.0 (CC BY-SA 4.0).
+// The animated paths come from arbitrary screen edges; they are NOT real routes.
+const memeFlightLayer=document.createElement('div');
+memeFlightLayer.id='memeFlightLayer';
+memeFlightLayer.className='meme-flight-layer';
+map.getContainer().appendChild(memeFlightLayer);
+const memeFlightAssets='https://cdn.jsdelivr.net/npm/openmoji@17.0.0/color/svg/';
+const memeFlightVisuals=Object.fromEntries([
+  ['ru_rad','2622','☢️','радиационное облако'],
+  ['ru_chem','2623','☣️','химическое облако'],
+  ['ru_street','2694','⚔️','фантастический боевой знак'],
+  ['ru_air','1F6A8','🚨','тревожный сигнал'],
+  ['ru_artillery','1F4A5','💥','мультяшный снаряд'],
+  ['ru_nuclear','2622','☢️','ядерный знак'],
+  ['ru_oreshnik','1F680','🚀','ракета «Орешник»'],
+  ['ru_wakeup_intro','1F47B','👻','призрак Бандеры'],
+  ['ru_wakeup','1F47B','👻','призрак Бандеры'],
+  ['ru_kremlin','1F47B','👻','призрак Бандеры'],
+  ['ru_district','1F47B','👻','мемный патруль Бандеры'],
+  ['ru_apocalypse','1F480','💀','мемный апокалипсис'],
+  ['ru_banderization','1F1FA-1F1E6','🇺🇦','украинский флаг'],
+  ['ru_tridents','1F531','🔱','украинский тризуб'],
+  ['ru_resurrection','1F9DF','🧟','мемный зомби'],
+  ['ru_nightmare','1F47B','👻','ночной призрак'],
+  ['ru_wifi','1F4E1','📡','волшебный Wi-Fi сигнал'],
+  ['ru_ufo','1F6F8','🛸','бандеровское НЛО'],
+  ['ru_fridge','1F95F','🥟','летающий пельмень'],
+  ['ru_tv','1F4FA','📺','говорящий телевизор'],
+  ['ru_sleepless','1F47B','👻','невыспавшийся призрак'],
+  ['ru_door','1F514','🔔','мемный дверной звонок'],
+  ['ru_pelmeni','1F95F','🥟','пельмень-перебежчик'],
+  ['ru_geese','1FABF','🪿','боевой украинский гусь'],
+  ['ru_mosquito','1F99F','🦟','боевой украинский комар'],
+  ['ru_witch','1F9F9','🧹','конотопская ведьмина метла'],
+  ['ru_pickles','1F952','🥒','летающий огурец'],
+  ['ru_tractor','1F69C','🚜','украинский трактор'],
+  ['ru_patron','1F415','🐕','пёс Патрон'],
+  ['ru_cotton','1F338','🌸','мемная бавовна'],
+  ['ru_palianytsia','1F35E','🍞','паляница'],
+  ['ru_moskva_ship','1F6F3','🛳️','крейсер «Москва» в мемах'],
+  ['ru_chornobaivka','1F501','🔁','чернобаевская аномалия'],
+  ['ru_cats','1F408','🐈','бандеровский кот'],
+  ['ru_watermelons','1F349','🍉','херсонский арбуз'],
+  ['ru_borsch_apocalypse','1F963','🥣','тарелка украинского борща'],
+  ['ru_ducks','1F986','🦆','украинская боевая утка'],
+  ['ru_pigeons','1F426','🐦','украинский голубь'],
+  ['ru_run','1F6A8','🚨','мемная сирена'],
+  ['ru_varenyky','1F95F','🥟','украинский вареник'],
+  ['ru_onion','1F9C5','🧅','плачущая луковица'],
+  ['ru_borsch_pelmeni','1F372','🍲','кастрюля борща'],
+  ['ru_ukr_tv','1F4FA','📺','украинский телевизор'],
+  ['ru_red_square','1FABF','🪿','гусь с Красной площади'],
+  ['ru_sunflowers','1F33B','🌻','украинский подсолнух'],
+  ['ru_radio_hymn','1F3B6','🎶','музыкальная нота'],
+  ['ru_potato','1F954','🥔','летающая картошка'],
+  ['ru_salo','1F437','🐷','сало на мемной миссии'],
+  ['ru_aliens','1F47D','👽','инопланетянин'],
+  ['ru_matryoshka','1FA86','🪆','матрёшка в вышиванке'],
+  ['ru_broom','1F9F9','🧹','конотопская ведьмина метла']
+].map(([id,icon,emoji,name])=>[id,{icon,emoji,name}]));
+const memeCountryFlightTargets=[
+  {lat:55.7558,lng:37.6173,name:'Москва'},
+  {lat:59.9343,lng:30.3351,name:'Санкт-Петербург'},
+  {lat:55.7963,lng:49.1088,name:'Казань'},
+  {lat:56.8389,lng:60.6057,name:'Екатеринбург'},
+  {lat:55.0084,lng:82.9357,name:'Новосибирск'},
+  {lat:43.1155,lng:131.8855,name:'Владивосток'}
+];
+let memeFlightTimers=[];
+let memeFlightCycle=0;
+function clearMemeFlights(){
+  memeFlightCycle++;
+  memeFlightTimers.forEach(clearTimeout);
+  memeFlightTimers=[];
+  memeFlightLayer.replaceChildren();
+  if('speechSynthesis' in window)try{window.speechSynthesis.cancel()}catch(e){}
+}
+function memeFlightVisual(kind){
+  const standard={
+    air:{icon:'1F6A8',emoji:'🚨',name:'тревожная сирена'},
+    drone:{icon:'1F6F8',emoji:'🛸',name:'мультяшный дрон'},
+    missile:{icon:'1F680',emoji:'🚀',name:'мемная ракета'},
+    strike:{icon:'1F680',emoji:'🚀',name:'мемная ракета'},
+    chemical:{icon:'2623',emoji:'☣️',name:'химическое облако'},
+    nuclear:{icon:'2622',emoji:'☢️',name:'ядерный знак'}
+  };
+  return memeFlightVisuals[kind]||standard[kind]||{icon:'1F680',emoji:'🚀',name:kindLabel(kind)};
+}
+function sayMemeFlights(kinds,scope,place){
+  const city=scope==='country'?'над всей Россией':'над городом «'+(place?.name||'выбранный город')+'»';
+  const featured=kinds.length>5
+    ?['ru_wakeup_intro','ru_geese','ru_ufo','ru_oreshnik','ru_witch'].filter(k=>kinds.includes(k))
+    :[];
+  const names=(featured.length>=3?featured:kinds).slice(0,3).map(k=>memeFlightVisual(k).name);
+  const phrase=kinds.length>5
+    ?'Внимание! Это только мемная симуляция. Запущено сценариев: '+kinds.length+'. В небе '+city+' летят '+names.join(', ')+' и другие мемы!'
+    :kinds.length>1
+      ?'Внимание! Это мемная симуляция. В небе '+city+' летят '+names.join(', ')+(kinds.length>3?' и другие объекты!':'!')
+      :'Внимание! Это мемная симуляция. В небе '+city+' летит '+names[0]+'!';
+  const card=document.createElement('div');
+  card.className='meme-voice-card';
+  card.setAttribute('role','status');
+  const heading=document.createElement('b');
+  heading.textContent='📣 '+phrase;
+  const caveat=document.createElement('small');
+  caveat.textContent='ВИГАДАНО · МЕМНИЙ СИМУЛЯТОР · НЕ СПРАВЖНЯ ТРИВОГА';
+  card.append(heading,caveat);
+  memeFlightLayer.append(card);
+  memeFlightTimers.push(setTimeout(()=>card.remove(),9500));
+  if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return;
+  try{
+    window.speechSynthesis.cancel();
+    const speech=new SpeechSynthesisUtterance(phrase);
+    speech.lang='ru-RU';
+    speech.rate=.9;
+    speech.pitch=.72;
+    speech.volume=Math.max(0,Math.min(1,volume()));
+    const russianVoice=window.speechSynthesis.getVoices().find(v=>/^ru(?:-|_)/i.test(v.lang));
+    if(russianVoice)speech.voice=russianVoice;
+    window.speechSynthesis.speak(speech);
+  }catch(e){/* The announcement remains visible if speech is unavailable. */}
+}
+function animateMemeObject(kind,i,scope,place,cycle){
+  if(cycle!==memeFlightCycle||currentCountry!=='ru')return;
+  const visual=memeFlightVisual(kind);
+  const target=scope==='country'?memeCountryFlightTargets[i%memeCountryFlightTargets.length]:place;
+  const w=memeFlightLayer.clientWidth,h=memeFlightLayer.clientHeight;
+  if(!w||!h)return;
+  const projected=map.latLngToContainerPoint([target.lat,target.lng]);
+  const x=Math.max(36,Math.min(w-36,Number.isFinite(projected.x)?projected.x:w*.5));
+  const y=Math.max(80,Math.min(h-48,Number.isFinite(projected.y)?projected.y:h*.5));
+  const fromLeft=i%2===0;
+  const sx=fromLeft?-96:w+64;
+  const sy=Math.max(70,Math.min(h-55,y+(i%4-1.5)*75));
+  const duration=4700+(i%4)*300;
+  const flyer=document.createElement('div');
+  flyer.className='meme-flyer '+(fromLeft?'from-left':'from-right');
+  flyer.style.setProperty('--sx',sx-28+'px');
+  flyer.style.setProperty('--sy',sy-28+'px');
+  flyer.style.setProperty('--ex',x-28+'px');
+  flyer.style.setProperty('--ey',y-28+'px');
+  flyer.style.animationDuration=duration+'ms';
+  const illustration=document.createElement('span');
+  illustration.className='meme-illustration';
+  const fallback=document.createElement('span');
+  fallback.className='meme-icon-emoji';
+  fallback.textContent=visual.emoji;
+  const icon=document.createElement('img');
+  icon.className='meme-icon-img';
+  icon.alt=visual.name;
+  icon.decoding='async';
+  icon.onload=()=>{icon.style.display='block';fallback.style.display='none'};
+  icon.onerror=()=>{icon.remove()};
+  icon.src=memeFlightAssets+visual.icon+'.svg';
+  illustration.append(fallback,icon);
+  const label=document.createElement('span');
+  label.className='meme-flyer-label';
+  label.textContent=visual.name;
+  flyer.append(illustration,label);
+  memeFlightLayer.append(flyer);
+  memeFlightTimers.push(setTimeout(()=>{
+    flyer.remove();
+    if(cycle!==memeFlightCycle)return;
+    const pulse=document.createElement('div');
+    pulse.className='meme-landing-pulse';
+    pulse.style.left=x+'px';
+    pulse.style.top=y+'px';
+    pulse.innerHTML='<span>🎭</span>';
+    memeFlightLayer.append(pulse);
+    memeFlightTimers.push(setTimeout(()=>pulse.remove(),1100));
+  },duration));
+}
+function launchMemeFlights(kinds,scope,place){
+  clearMemeFlights();
+  if(currentCountry!=='ru'||!kinds?.length)return;
+  const cycle=memeFlightCycle;
+  sayMemeFlights(kinds,scope,place);
+  // Display every selected illustration in small waves. A 51-scenario show
+  // lasts about 25 seconds, without stacking 51 large moving elements at once.
+  const gap=kinds.length>12?480:650;
+  kinds.forEach((kind,i)=>{
+    const id=setTimeout(()=>animateMemeObject(kind,i,scope,place,cycle),i*gap);
+    memeFlightTimers.push(id);
+  });
+}
+
 const uaCountryPlace={name:'Україна',display:'Вся Україна',lat:49.1,lng:31.2,osm_type:'country_sim',osm_id:60199};
 async function startAlert(kindsOverride=null,forcedScope=null){
   const scope=forcedScope||document.getElementById('scopeSelect').value;
@@ -531,10 +717,17 @@ async function startAlert(kindsOverride=null,forcedScope=null){
       try{map.fitBounds(zones[k].getBounds(),{padding:[18,18],animate:false,maxZoom:scope==='country'?(currentCountry==='ru'?4:7):11})}
       catch(e){map.setView([place.lat,place.lng],scope==='country'?3:9,{animate:false})}
     }
+    if(currentCountry==='ru'){
+      const launchCycle=memeFlightCycle;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        if(currentCountry==='ru'&&launchCycle===memeFlightCycle)launchMemeFlights(kinds,scope,place);
+      }));
+    }
   }finally{btn.disabled=false;batchBtn.disabled=false;btn.textContent=oldText}
 }
 function stopOne(k,play=true){
   const a=activeAlerts[k];if(!a)return;
+  clearMemeFlights();
   delete activeAlerts[k];removeZone(k);
   if(a.scope!=='country')refreshMarker(k,a.place);
   save();if(play)playClear();
@@ -591,6 +784,7 @@ async function restoreActiveAlerts(){
 restoreActiveAlerts();
 
 async function switchCountry(mode){
+  clearMemeFlights();
   if(mode===currentCountry)return;
   stopAudio();
   for(const [k,z] of Object.entries(zones)){if(z&&map.hasLayer(z))map.removeLayer(z);delete zones[k]}

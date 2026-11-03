@@ -557,3 +557,85 @@ button:hover{
   .ru-scenario-list{max-height:280px}
   .ru-batch-buttons button{min-height:49px}
 }
+
+
+/* Animated fictional object flights for the Russia meme simulator. */
+#memeFlightLayer.meme-flight-layer{
+  position:absolute;inset:0;z-index:1200;pointer-events:none;
+  overflow:hidden;isolation:isolate;
+}
+.meme-voice-card{
+  position:absolute;top:76px;left:50%;transform:translateX(-50%);
+  width:min(88%,540px);padding:12px 16px;border-radius:16px;
+  background:linear-gradient(125deg,rgba(11,20,36,.95),rgba(35,17,51,.94));
+  color:#f9fbff;border:1px solid rgba(246,155,241,.64);
+  box-shadow:0 10px 35px rgba(0,0,0,.38),0 0 20px rgba(150,57,206,.35);
+  text-align:center;z-index:9;line-height:1.4;font-size:14px;
+  animation:meme-voice-in .35s ease-out both;
+}
+.meme-voice-card b{display:block;font-weight:900}
+.meme-voice-card small{display:block;font-size:10px;letter-spacing:.06em;color:#ffc5fb;margin-top:7px;font-weight:800}
+@keyframes meme-voice-in{
+  from{opacity:0;transform:translate(-50%,-15px) scale(.95)}
+  to{opacity:1;transform:translate(-50%,0) scale(1)}
+}
+.meme-flyer{
+  position:absolute;left:0;top:0;display:flex;align-items:center;
+  flex-direction:column;gap:3px;width:86px;min-height:80px;
+  opacity:0;will-change:transform,opacity;z-index:4;
+  animation-name:meme-flight-motion;animation-timing-function:cubic-bezier(.24,.13,.58,1);
+  animation-fill-mode:forwards;
+}
+@keyframes meme-flight-motion{
+  0%{transform:translate3d(var(--sx),var(--sy),0) scale(.62) rotate(-9deg);opacity:0}
+  9%{opacity:1}
+  76%{opacity:1}
+  100%{transform:translate3d(var(--ex),var(--ey),0) scale(1.09) rotate(6deg);opacity:0}
+}
+.meme-flyer::before{
+  content:'';position:absolute;top:23px;right:60px;width:115px;height:18px;
+  border-radius:100%;background:linear-gradient(90deg,transparent,rgba(83,203,255,.0),rgba(100,219,255,.9));
+  filter:blur(5px);z-index:-1;transform:rotate(-4deg);
+}
+.meme-flyer.from-right::before{left:60px;right:auto;transform:rotate(4deg) scaleX(-1)}
+.meme-illustration{
+  display:grid;place-items:center;width:65px;height:65px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.95) 1%,rgba(195,221,255,.8) 49%,rgba(72,157,250,.25) 75%,transparent 100%);
+  filter:drop-shadow(0 2px 10px rgba(36,111,255,.55));flex-shrink:0;
+}
+.meme-icon-img{width:58px;height:58px;object-fit:contain;display:none}
+.meme-icon-emoji{display:grid;place-items:center;font-size:46px;line-height:1;width:100%;height:100%;text-shadow:0 2px 7px #072649}
+.meme-flyer-label{
+  display:block;max-width:100px;padding:3px 5px;border-radius:6px;
+  background:rgba(8,14,28,.87);border:1px solid rgba(114,206,255,.48);
+  color:white;font-size:10px;line-height:1.17;font-weight:800;
+  text-align:center;word-break:break-word;text-shadow:0 1px 2px #000;
+}
+.meme-landing-pulse{
+  position:absolute;z-index:2;display:grid;place-items:center;
+  width:22px;height:22px;transform:translate(-50%,-50%);
+  border:3px solid #6bd7ff;border-radius:50%;
+  box-shadow:0 0 0 2px rgba(110,219,255,.2),0 0 20px #25b8ff;
+  animation:meme-pulse-arrival 1.1s ease-out forwards;
+}
+.meme-landing-pulse span{font-size:12px;position:relative;z-index:2}
+@keyframes meme-pulse-arrival{
+  0%{opacity:.95;transform:translate(-50%,-50%) scale(.5)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(5)}
+}
+.ru-illustration-credit{font-size:11px;color:#b9d1e9;margin-top:8px}
+.ru-illustration-credit a{color:#a9d7ff}
+@media(max-width:850px){
+  .meme-voice-card{top:75px;width:92%;font-size:12px;padding:10px 12px}
+  .meme-voice-card small{font-size:9px}
+  .meme-flyer{width:72px}
+  .meme-illustration{width:57px;height:57px}
+  .meme-icon-img{width:51px;height:51px}
+  .meme-icon-emoji{font-size:39px}
+  .meme-flyer-label{font-size:9px;max-width:86px}
+}
+@media(prefers-reduced-motion:reduce){
+  .meme-flyer{animation-duration:.05s!important;opacity:1}
+  .meme-landing-pulse{animation-duration:.05s}
+  .meme-voice-card{animation:none}
+}
