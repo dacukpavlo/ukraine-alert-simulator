@@ -56,6 +56,78 @@ document.getElementById('searchBtn').onclick=runSearch;
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch()}});
 
 function volume(){return +document.getElementById('volumeRange').value/100}
+// Five user-supplied sounds extracted from the attached videos.
+// The first three have generic labels because no identifying title is visible.
+const customSounds=[
+  {id:'v1',label:'🎧 Звук №1',description:'Перший відеозапис · 12 с',src:'audio/user-sound-1.mp3'},
+  {id:'v2',label:'🔊 Звук №2',description:'Другий відеозапис · 12 с',src:'audio/user-sound-2.mp3'},
+  {id:'v3',label:'🚨 Звук №3',description:'Третій відеозапис · 12 с',src:'audio/user-sound-3.mp3'},
+  {id:'chemical',label:'☣️ Хімічна загроза',description:'Четвертий відеозапис · 12 с',src:'audio/user-sound-4.mp3'},
+  {id:'radiation',label:'☢️ Радіаційна небезпека',description:'П’ятий відеозапис · 11 с',src:'audio/user-sound-5.mp3'}
+];
+let customSoundSelected=localStorage.getItem('uaCustomSoundSelected')||'';
+if(!customSounds.some(s=>s.id===customSoundSelected))customSoundSelected='';
+let customSoundPlaying='';
+const customPlayer=document.getElementById('customSoundPlayer');
+function stopCustomPlayer(){
+  if(!customPlayer)return;
+  customPlayer.pause();
+  try{customPlayer.currentTime=0}catch(e){}
+  customSoundPlaying='';
+  renderCustomSoundControls();
+}
+function renderCustomSoundControls(){
+  const list=document.getElementById('customSoundList');
+  if(!list)return;
+  list.innerHTML=customSounds.map(s=>
+    '<div class="custom-sound-row '+(customSoundSelected===s.id?'selected':'')+'">'+
+      '<div class="custom-sound-meta"><b>'+s.label+'</b><small>'+s.description+'</small></div>'+
+      '<button type="button" class="custom-sound-preview" data-preview="'+s.id+'" aria-label="Прослухати '+s.label+'">'+
+        (customSoundPlaying===s.id?'■ Стоп':'▶ Слухати')+'</button>'+
+      '<button type="button" class="custom-sound-select '+(customSoundSelected===s.id?'chosen':'')+'" data-choose="'+s.id+'">'+
+        (customSoundSelected===s.id?'✓ Обрано':'Вибрати')+'</button>'+
+    '</div>'
+  ).join('');
+  const active=customSounds.find(s=>s.id===customSoundSelected);
+  document.getElementById('customSoundStatus').textContent=active
+    ?'Зараз для запуску тривог вибрано: '+active.label
+    :'Зараз використовуються стандартні звуки карти.';
+  list.querySelectorAll('[data-preview]').forEach(btn=>btn.addEventListener('click',()=>{
+    const id=btn.dataset.preview;
+    if(customSoundPlaying===id){stopCustomPlayer();return}
+    playCustomSound(id);
+  }));
+  list.querySelectorAll('[data-choose]').forEach(btn=>btn.addEventListener('click',()=>{
+    customSoundSelected=btn.dataset.choose;
+    localStorage.setItem('uaCustomSoundSelected',customSoundSelected);
+    renderCustomSoundControls();
+  }));
+}
+function playCustomSound(id){
+  const clip=customSounds.find(s=>s.id===id);
+  if(!clip)return false;
+  stopAudio();
+  customPlayer.src=clip.src;
+  customPlayer.volume=volume();
+  customSoundPlaying=id;
+  renderCustomSoundControls();
+  const attempt=customPlayer.play();
+  if(attempt?.catch)attempt.catch(()=>{
+    customSoundPlaying='';
+    renderCustomSoundControls();
+  });
+  return true;
+}
+customPlayer.addEventListener('ended',()=>{
+  customSoundPlaying='';
+  renderCustomSoundControls();
+});
+document.getElementById('customSoundDefault').addEventListener('click',()=>{
+  customSoundSelected='';
+  localStorage.removeItem('uaCustomSoundSelected');
+  stopCustomPlayer();
+});
+renderCustomSoundControls();
 let syntheticContext=null;
 let syntheticOscillators=[];
 function stopSynthetic(){
@@ -66,6 +138,7 @@ function stopAudio(){
   ['airSound','droneSound','allClearSound','ruAirSound','ruDroneSound','ruMissileSound','ruChemicalSound','ruNuclearSound'].forEach(id=>{
     const a=document.getElementById(id);if(a){a.pause();a.currentTime=0}
   });
+  if(customSoundPlaying)stopCustomPlayer();
   stopSynthetic();
 }
 // Original short sound effects. Keep just a few notes playing in sequence even when 51
@@ -240,6 +313,7 @@ function playThreat(k){
   if(a){a.volume=volume();a.play().catch(()=>playSyntheticSet([k]))}
 }
 function playThreatSet(kinds){
+  if(customSoundSelected && playCustomSound(customSoundSelected))return;
   if(kinds.length===1){playThreat(kinds[0]);return}
   stopAudio();
   if(currentCountry==='ru'&&kinds.length>=7){
@@ -249,7 +323,10 @@ function playThreatSet(kinds){
   playSyntheticSet(kinds);
 }
 function playClear(){stopAudio();const a=document.getElementById('allClearSound');a.volume=volume();a.play().catch(()=>{})}
-document.getElementById('volumeRange').oninput=e=>document.getElementById('volumeValue').textContent=e.target.value+'%';
+document.getElementById('volumeRange').oninput=e=>{
+  document.getElementById('volumeValue').textContent=e.target.value+'%';
+  if(customSoundPlaying)customPlayer.volume=volume();
+};
 
 
 

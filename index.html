@@ -48,7 +48,7 @@
   }
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=20261103-flight1">
+  <link rel="stylesheet" href="style.css?v=20261104-useraudio1">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -142,6 +142,15 @@
       <button id="stopAllBtn" class="stop-all">Відбій усіх</button>
     </section>
 
+    <section class="card custom-sounds-card" id="customSoundsCard">
+      <h2>🔊 Звуки з твоїх відео</h2>
+      <p class="small">Додав 5 надісланих звуків. Натисни <b>«▶ Слухати»</b>, щоб перевірити запис, або <b>«Вибрати»</b>, щоб він лунав під час наступного запуску тривоги. Це працює на обох картах.</p>
+      <div class="custom-sounds-list" id="customSoundList"></div>
+      <p class="custom-sound-status" id="customSoundStatus" aria-live="polite">Зараз використовуються стандартні звуки карти.</p>
+      <button type="button" class="custom-sound-default" id="customSoundDefault">↩ Повернути стандартні звуки</button>
+      <p class="small">Звуки взяті з надісланих відео. Гучність змінюється повзунком вище. Симулятор не є офіційною системою оповіщень.</p>
+    </section>
+
     <section class="card meme-info hidden" id="russiaMemeInfo">
       <h2>😂 Мемні повідомлення</h2>
       <p class="small">Російський режим — авторські жарти, а не реальні сповіщення чи факти запусків. Меми натхненні українською реакцією на новини.</p>
@@ -219,8 +228,9 @@
 <audio id="ruMissileSound" src="audio/ru-missile.ogg" preload="none"></audio>
 <audio id="ruChemicalSound" src="audio/ru-chemical.ogg" preload="none"></audio>
 <audio id="ruNuclearSound" src="audio/ru-nuclear.ogg" preload="none"></audio>
+<audio id="customSoundPlayer" preload="none" playsinline></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261103-flight1"></script>
+<script src="script.js?v=20261104-useraudio1"></script>
 </body>
 </html>
