@@ -604,17 +604,17 @@ function sayMemeFlights(kinds,scope,place){
     :[];
   const names=(featured.length>=3?featured:kinds).slice(0,3).map(k=>memeFlightVisual(k).name);
   const phrase=kinds.length>5
-    ?'Внимание! Это только мемная симуляция. Запущено сценариев: '+kinds.length+'. В небе '+city+' летят '+names.join(', ')+' и другие мемы!'
+    ?'Внимание! Запущено сценариев: '+kinds.length+'. В небе '+city+' летят '+names.join(', ')+' и другие мемы!'
     :kinds.length>1
-      ?'Внимание! Это мемная симуляция. В небе '+city+' летят '+names.join(', ')+(kinds.length>3?' и другие объекты!':'!')
-      :'Внимание! Это мемная симуляция. В небе '+city+' летит '+names[0]+'!';
+      ?'Внимание! В небе '+city+' летят '+names.join(', ')+(kinds.length>3?' и другие объекты!':'!')
+      :'Внимание! В небе '+city+' летит '+names[0]+'!';
   const card=document.createElement('div');
   card.className='meme-voice-card';
   card.setAttribute('role','status');
   const heading=document.createElement('b');
   heading.textContent='📣 '+phrase;
   const caveat=document.createElement('small');
-  caveat.textContent='ВИГАДАНО · МЕМНИЙ СИМУЛЯТОР · НЕ СПРАВЖНЯ ТРИВОГА';
+  caveat.textContent='⚡ УВАГА! МЕМНА ТРИВОГА СКОРО';
   card.append(heading,caveat);
   memeFlightLayer.append(card);
   memeFlightTimers.push(setTimeout(()=>card.remove(),9500));
