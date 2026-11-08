@@ -74,3 +74,152 @@
  .demo-radar:after{animation:none}
  .demo-finish{animation-duration:.05s}
 }
+
+
+/* v2: real basemap shown separately from deliberately non-geographic flight graphics */
+.demo-mode .flight-demo-stage{
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+.demo-stage-head{
+  flex:none;
+  padding:14px 20px;
+  align-items:center;
+  background:linear-gradient(120deg,#112846,#122036);
+}
+.demo-stage-head h2{font-size:clamp(18px,2vw,24px);margin:0 0 4px}
+.demo-demo-badge{max-width:280px;text-align:center}
+.demo-geo-window{
+  position:relative;
+  flex:1 1 57%;
+  min-height:210px;
+  background:#182e3d;
+  border-bottom:1px solid #4f8dbc60;
+  overflow:hidden;
+}
+#demoGeoMap{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+#demoGeoMap.leaflet-container{background:#10202f}
+.demo-geo-hint{
+  z-index:500;
+  position:absolute;
+  left:12px;
+  top:12px;
+  max-width:calc(100% - 85px);
+  color:#eff7ff;
+  font-size:11px;
+  border:1px solid #96bfeb70;
+  background:#102840e3;
+  padding:7px 10px;
+  border-radius:9px;
+  pointer-events:none;
+  box-shadow:0 5px 20px #0005;
+}
+#demoGeoMap .leaflet-control-attribution{
+  background:#f4f7fce8;
+  color:#16253b;
+  font-size:9px;
+}
+.demo-sim-window{
+  flex:0 0 43%;
+  min-height:215px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  background:#071626;
+}
+.demo-sim-heading{
+  z-index:2;
+  display:flex;
+  flex:none;
+  gap:8px;
+  align-items:center;
+  justify-content:space-between;
+  padding:7px 16px;
+  border-bottom:1px solid #4c7ea241;
+  background:linear-gradient(90deg,#153758,#0d1e31);
+}
+.demo-sim-heading b{font-size:12px;color:#e2f3ff}
+.demo-sim-heading small{color:#a9c9e1;font-size:10px;text-align:right}
+.demo-sim-window .demo-world{flex:1 1 auto;min-height:0}
+.demo-sim-window .demo-radar{width:min(38vw,290px)}
+.demo-sim-window .demo-world:after{pointer-events:none}
+.demo-sim-window .demo-node{width:125px}
+.demo-sim-window .demo-node b{font-size:10px;padding:4px 7px}
+.demo-sim-window .demo-node i{width:10px;height:10px;margin-bottom:2px}
+.demo-sim-window .demo-world-footer{bottom:6px}
+.demo-sim-window .demo-world-footer span{padding:5px 8px;font-size:9px}
+.demo-object-preview{
+  display:flex;
+  gap:13px;
+  align-items:center;
+  border:1px solid #55799b;
+  background:linear-gradient(110deg,#172d47,#101d30);
+  border-radius:12px;
+  padding:10px 12px;
+  margin:10px 0 7px;
+}
+.demo-object-preview svg{
+  flex:none;
+  width:86px;
+  height:54px;
+  display:block;
+  filter:drop-shadow(0 4px 10px #1118);
+}
+.demo-object-preview b{
+  display:block;
+  font-size:13px;
+  color:#edf6ff;
+}
+.demo-object-preview small{
+  display:block;
+  font-size:10px;
+  color:#a7bed3;
+  line-height:1.35;
+  margin-top:4px;
+}
+.demo-flyer .demo-sprite{
+  width:62px;
+  height:40px;
+  border-radius:12px;
+  background:#0b1b2be8;
+  display:flex;
+}
+.demo-flyer .demo-sprite svg{
+  width:60px;
+  height:38px;
+  display:block;
+  transform:rotate(-7deg);
+}
+.demo-flyer>span{
+  font-size:10px;
+  font-weight:700;
+}
+.demo-world-footer span{backdrop-filter:blur(5px)}
+#demoPause:disabled{opacity:.5;cursor:not-allowed}
+@media(min-width:900px){
+  .demo-mode .flight-demo-stage{min-height:500px}
+}
+@media(max-width:850px){
+  .demo-mode .map-area{height:auto;min-height:0}
+  .demo-mode .flight-demo-stage{
+    height:760px;
+    min-height:760px;
+    flex:none;
+  }
+  .demo-stage-head{padding:12px}
+  .demo-demo-badge{font-size:9px;padding:6px 8px;max-width:138px}
+  .demo-geo-window{min-height:0;flex:1 1 auto}
+  .demo-sim-window{flex:0 0 320px;min-height:320px}
+  .demo-sim-heading{align-items:flex-start;flex-direction:column;gap:1px;padding:8px 12px}
+  .demo-sim-heading small{text-align:left}
+  .demo-sim-window .demo-node{width:85px}
+  .demo-sim-window .demo-node b{font-size:8px;padding:4px 4px}
+  .demo-flyer .demo-sprite{width:43px;height:31px}
+  .demo-flyer .demo-sprite svg{width:42px;height:29px}
+  .demo-flyer>span{font-size:9px}
+  .demo-geo-hint{top:8px;left:8px;max-width:calc(100% - 110px);font-size:9px}
+  .demo-object-preview svg{width:74px;height:46px}
+}
