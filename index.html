@@ -49,7 +49,7 @@
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css?v=20261104-memevoice3">
-  <link rel="stylesheet" href="flight-demo.css?v=20261108-demo1">
+  <link rel="stylesheet" href="flight-demo.css?v=20261108-demo2">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -101,7 +101,7 @@
 
     <section class="card demo-controls hidden" id="demoControls" aria-label="Анімація умовних польотів">
       <h2>🛰️ Анімація польотів</h2>
-      <p class="demo-helper">Окремий вигаданий режим із умовними секторами. Назви об’єктів — декоративні, а маршрути, перехоплення й лічильники не відповідають реальним подіям.</p>
+      <p class="demo-helper">Справжня карта України та сусідньої Росії з містами й супутниковим виглядом. Унизу — художні польоти в умовних секторах, без реальних цілей та маршрутів.</p>
       <label for="demoObject">Об’єкт на карті</label>
       <select id="demoObject">
         <option value="neptune">🚀 Нептун · стилізована іконка</option>
@@ -109,17 +109,19 @@
         <option value="palianytsia">🛩️ Паляниця · стилізована іконка</option>
         <option value="drone">🛸 Безпілотник · стилізована іконка</option>
       </select>
+      <div id="demoObjectPreview" class="demo-object-preview" aria-live="polite"></div>
       <label for="demoQuantity">Кількість умовних об’єктів</label>
       <select id="demoQuantity">
         <option value="1">1 об’єкт</option>
         <option value="3" selected>3 об’єкти</option>
         <option value="6">6 об’єктів</option>
         <option value="9">9 об’єктів</option>
+        <option value="12">12 об’єктів</option>
       </select>
       <label for="demoVisual">Стиль фону</label>
       <select id="demoVisual">
-        <option value="grid">Темна карта-схема</option>
-        <option value="satellite">Умовний супутниковий стиль</option>
+        <option value="grid">🗺️ Звичайна карта (OpenStreetMap)</option>
+        <option value="satellite">🛰️ Супутникова карта (Esri)</option>
       </select>
       <div class="demo-actions">
         <button type="button" id="demoStart">▶ Запустити</button>
@@ -132,6 +134,7 @@
         <div class="demo-stat"><b id="demoIntercepted">0</b><small>Умовно перехоплено</small></div>
         <div class="demo-stat"><b id="demoFinished">0</b><small>Завершили маршрут</small></div>
       </div>
+      <p class="demo-helper">🗺️ Реальна географія показується окремо від умовних польотів. Статистика нижче стосується тільки демонстраційного режиму.</p>
       <p class="demo-helper">📜 Журнал анімації</p>
       <ul id="demoLog" aria-live="polite"><li>Натисніть «Запустити», щоб почати.</li></ul>
     </section>
@@ -225,29 +228,39 @@
   </aside>
 
   <main class="map-area">
-    <section id="flightDemoStage" class="flight-demo-stage" aria-label="Вигадана анімація рухомих об’єктів">
+    <section id="flightDemoStage" class="flight-demo-stage" aria-label="Географічна карта і окрема демонстраційна анімація">
       <div class="demo-stage-head">
         <div>
-          <h2>🛰️ Польоти · візуалізація</h2>
+          <h2>🛰️ Карта України та сусідніх територій</h2>
           <p id="demoStatus">Готово до запуску</p>
         </div>
-        <div class="demo-demo-badge">ВИГАДАНА СХЕМА · НЕ РЕАЛЬНІ ПОДІЇ</div>
+        <div class="demo-demo-badge">КАРТА СПРАВЖНЯ · ПОЛЬОТИ УМОВНІ</div>
       </div>
-      <div class="demo-world" id="demoWorld">
-        <div class="demo-radar" aria-hidden="true"></div>
-        <svg id="demoPaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M17 71 Q41 12 73 21"></path>
-          <path d="M17 71 Q41 28 82 48"></path>
-          <path d="M17 71 Q41 44 71 73"></path>
-        </svg>
-        <div class="demo-node start" style="left:17%;top:71%"><i></i><b>Умовний старт</b></div>
-        <div class="demo-node" style="left:73%;top:21%"><i></i><b>Сектор Альфа</b></div>
-        <div class="demo-node" style="left:82%;top:48%"><i></i><b>Сектор Бета</b></div>
-        <div class="demo-node" style="left:71%;top:73%"><i></i><b>Сектор Гамма</b></div>
-        <div id="demoFlights" aria-hidden="true"></div>
-        <div class="demo-world-footer">
-          <span><strong>●</strong> Художня анімація</span>
-          <span>Без реальних координат та цілей</span>
+      <div class="demo-geo-window">
+        <div id="demoGeoMap" aria-label="Інтерактивна карта України та сусідньої території Росії"></div>
+        <div class="demo-geo-hint">🗺️ Пересувай карту та змінюй масштаб · стиль вибирається ліворуч</div>
+      </div>
+      <div class="demo-sim-window">
+        <div class="demo-sim-heading">
+          <b>✦ Анімація об’єктів</b>
+          <small>Окрема схема · не прив’язана до міст або координат на карті</small>
+        </div>
+        <div class="demo-world" id="demoWorld">
+          <div class="demo-radar" aria-hidden="true"></div>
+          <svg id="demoPaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M17 71 Q41 12 73 21"></path>
+            <path d="M17 71 Q41 28 82 48"></path>
+            <path d="M17 71 Q41 44 71 73"></path>
+          </svg>
+          <div class="demo-node start" style="left:17%;top:71%"><i></i><b>Умовний старт</b></div>
+          <div class="demo-node" style="left:73%;top:21%"><i></i><b>Логістичний сектор</b></div>
+          <div class="demo-node" style="left:82%;top:48%"><i></i><b>Технічний сектор</b></div>
+          <div class="demo-node" style="left:71%;top:73%"><i></i><b>Промисловий сектор</b></div>
+          <div id="demoFlights" aria-hidden="true"></div>
+          <div class="demo-world-footer">
+            <span><strong>●</strong> Траєкторії художні</span>
+            <span>Без координат цілей</span>
+          </div>
         </div>
       </div>
     </section>
@@ -290,6 +303,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js?v=20261108-audiofix2"></script>
-<script src="flight-demo.js?v=20261108-demo1"></script>
+<script src="flight-demo.js?v=20261108-demo2"></script>
 </body>
 </html>
