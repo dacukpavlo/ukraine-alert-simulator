@@ -160,6 +160,7 @@
         <option value="drone">Загроза БпЛА / Shahed</option>
         <option value="missile">Ракетна загроза</option>
         <option value="strike">Загроза ракетного удару</option>
+        <option value="artillery">Артилерійський обстріл (демо)</option>
         <option value="chemical">Хімічна небезпека</option>
         <option value="radiation">Радіаційна небезпека</option>
         <option value="nuclear">Ядерна небезпека</option>
@@ -185,13 +186,13 @@
     <section class="card meme-info hidden" id="russiaMemeInfo">
       <h2>😂 Мемні повідомлення</h2>
       <p class="small">Російський режим — авторські жарти, а не реальні сповіщення чи факти запусків. Меми натхненні українською реакцією на новини.</p>
-      <p class="small">Доступний 51 сценарій: Бандера, українські гуси, борщ, бавовна, ракети та інші. Сирени й короткі оригінальні мемні звукові ефекти.</p>
+      <p class="small">Доступні 52 сценарії: Бандера, українські гуси, борщ, бавовна, ракети та інші. Сирени й короткі оригінальні мемні звукові ефекти.</p>
     </section>
 
     <section class="card ru-multi-card hidden" id="ruMultiCard">
       <h2>🎭 Одночасні тривоги Росії</h2>
       <p class="small">Обери кілька сценаріїв: вони з'являться одночасно для вибраного міста, області або всієї Росії. Якщо вибрати 7 або більше сценаріїв, під час запуску прозвучить окрема моторошна сирена (близько 9 секунд). Для меншої кількості звучать короткі ефекти. Гучність регулюється нижче.</p>
-      <label for="ruScenarioSearch">Пошук серед 51 сценарію</label>
+      <label for="ruScenarioSearch">Пошук серед 52 сценаріїв</label>
       <input id="ruScenarioSearch" type="search" placeholder="Бандера, гуси, химическая…" autocomplete="off">
       <div class="ru-picker-toolbar">
         <button id="ruSelectAll" type="button">Вибрати всі</button>
@@ -288,7 +289,7 @@
 <audio id="uploadedThreatSound" preload="none" playsinline></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261108-audiofix1"></script>
+<script src="script.js?v=20261108-audiofix2"></script>
 <script src="flight-demo.js?v=20261108-demo1"></script>
 </body>
 </html>
