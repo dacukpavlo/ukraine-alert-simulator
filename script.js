@@ -68,16 +68,21 @@ const recordedThreatAudio={
 };
 let syntheticContext=null;
 let syntheticOscillators=[];
+let audioGeneration=0;
+// Cancels an unfinished boundary lookup when a newer action supersedes it.
+let pendingAlertLaunch=0;
 function stopSynthetic(){
   for(const osc of syntheticOscillators){try{osc.stop()}catch(e){}}
   syntheticOscillators=[];
 }
 function stopAudio(){
+  audioGeneration++;
   ['airSound','droneSound','allClearSound','ruAirSound','ruDroneSound','ruMissileSound','ruChemicalSound','ruNuclearSound'].forEach(id=>{
-    const a=document.getElementById(id);if(a){a.pause();a.currentTime=0}
+    const a=document.getElementById(id);
+    if(a){a.onerror=null;a.pause();try{a.currentTime=0}catch(e){}}
   });
   const recorded=document.getElementById('uploadedThreatSound');
-  if(recorded){recorded.pause();try{recorded.currentTime=0}catch(e){}}
+  if(recorded){recorded.onerror=null;recorded.pause();try{recorded.currentTime=0}catch(e){}}
   stopSynthetic();
 }
 // Original short sound effects. Keep just a few notes playing in sequence even when 51
@@ -241,24 +246,52 @@ function playDreadAlarm(){
     syntheticOscillators.push(wind);
   }catch(e){/* Keep the map usable if the browser blocks generated audio. */}
 }
+function soundTypeFor(k){return k==='ru_rad'?'radiation':(ruById[k]?.sound||k)}
+// Load the chosen clip as soon as a type is selected, reducing mobile start delay.
+function preloadSelectedThreatSound(){
+  const k=document.getElementById('threatSelect').value;
+  const f=recordedThreatAudio[soundTypeFor(k)];
+  const a=document.getElementById('uploadedThreatSound');
+  if(f&&a&&a.getAttribute('src')!==f){
+    a.setAttribute('src',f);
+    a.load();
+  }
+}
+document.getElementById('threatSelect').addEventListener('change',preloadSelectedThreatSound);
+
+function playMediaWithFallback(a,k){
+  if(!a){playSyntheticSet([k]);return}
+  a.volume=volume();
+  const token=audioGeneration;
+  let usedFallback=false;
+  const fallback=(error)=>{
+    if(token!==audioGeneration||usedFallback||error?.name==='AbortError')return;
+    usedFallback=true;
+    a.pause();
+    playSyntheticSet([k]);
+  };
+  a.onerror=()=>fallback();
+  try{
+    const result=a.play();
+    if(result&&typeof result.catch==='function')result.catch(fallback);
+  }catch(error){fallback(error)}
+}
 function playThreat(k){
   stopAudio();
-  const requestedType=k==='ru_rad'?'radiation':(ruById[k]?.sound||k);
+  const requestedType=soundTypeFor(k);
   const recording=recordedThreatAudio[requestedType];
   if(recording){
     const a=document.getElementById('uploadedThreatSound');
-    a.src=recording;
-    a.volume=volume();
-    a.play().catch(()=>playSyntheticSet([k]));
+    if(a&&a.getAttribute('src')!==recording)a.setAttribute('src',recording);
+    playMediaWithFallback(a,k);
     return;
   }
   const ruSounds={air:'ruAirSound',drone:'ruDroneSound',missile:'ruMissileSound',strike:'ruMissileSound',chemical:'ruChemicalSound',nuclear:'ruNuclearSound'};
   const scenario=ruById[k];
   if(scenario && !ruSounds[scenario.sound]){playSyntheticSet([k]);return}
   const type=scenario?.sound||k;
-  const id=currentCountry==='ru'?(ruSounds[type]||'ruAirSound'):(type==='drone'?'droneSound':'airSound');
-  const a=document.getElementById(id);
-  if(a){a.volume=volume();a.play().catch(()=>playSyntheticSet([k]))}
+  const id=currentCountry==='ru'?(ruSounds[type]||'ruAirSound'):(ruSounds[type]||'airSound');
+  playMediaWithFallback(document.getElementById(id),k);
 }
 function playThreatSet(kinds){
   if(kinds.length===1){playThreat(kinds[0]);return}
@@ -707,8 +740,12 @@ async function startAlert(kindsOverride=null,forcedScope=null){
     ? [...new Set(kindsOverride.filter(x=>currentCountry==='ru' && ruById[x]))]
     : [document.getElementById('threatSelect').value];
   if(!kinds.length){alert('Спочатку вибери хоча б один сценарій.');return}
-  primeAlarmAudio();
   if(currentCountry==='ua'&&kinds.some(k=>ruById[k])){alert('Мемні сценарії доступні лише для карти Росії.');return}
+  // A tap/click grants audio permission. Do not wait for an asynchronous map
+  // boundary request, otherwise Chrome on Android may silently block playback.
+  const launchId=++pendingAlertLaunch;
+  primeAlarmAudio();
+  playThreatSet(kinds);
   const kind=kinds[0];
   const k=scope==='country'?(currentCountry+':country'):keyOf(place);
   const btn=document.getElementById('startBtn');
@@ -719,8 +756,9 @@ async function startAlert(kindsOverride=null,forcedScope=null){
   try{
     const modeAtStart=currentCountry;
     const boundary=await resolveBoundary(place,scope);
-    if(modeAtStart!==currentCountry)return;
+    if(modeAtStart!==currentCountry||launchId!==pendingAlertLaunch)return;
     if(!boundary){
+      stopAudio();
       alert(scope==='country'
         ?'Не вдалося отримати межі країни. Перевір інтернет і спробуй ще раз через декілька секунд.'
         :scope==='wide'
@@ -733,7 +771,6 @@ async function startAlert(kindsOverride=null,forcedScope=null){
     save();
     if(scope!=='country')refreshMarker(k,place);
     addZone(k,activeAlerts[k]);
-    playThreatSet(kinds);
     showBanner(activeAlerts[k]);
     if(zones[k]&&typeof zones[k].getBounds==='function'){
       try{map.fitBounds(zones[k].getBounds(),{padding:[18,18],animate:false,maxZoom:scope==='country'?(currentCountry==='ru'?4:7):11})}
@@ -745,10 +782,17 @@ async function startAlert(kindsOverride=null,forcedScope=null){
         if(currentCountry==='ru'&&launchCycle===memeFlightCycle)launchMemeFlights(kinds,scope,place);
       }));
     }
+  }catch(error){
+    if(launchId===pendingAlertLaunch){
+      stopAudio();
+      alert('Не вдалося завантажити карту. Перевір інтернет і спробуй ще раз.');
+    }
   }finally{btn.disabled=false;batchBtn.disabled=false;btn.textContent=oldText}
 }
 function stopOne(k,play=true){
-  const a=activeAlerts[k];if(!a)return;
+  pendingAlertLaunch++;
+  const a=activeAlerts[k];
+  if(!a){stopAudio();return}
   clearMemeFlights();
   delete activeAlerts[k];removeZone(k);
   if(a.scope!=='country')refreshMarker(k,a.place);
@@ -761,6 +805,9 @@ document.getElementById('stopBtn').onclick=()=>{
   else if(selected)stopOne(keyOf(selected),true);
 };
 document.getElementById('stopAllBtn').onclick=()=>{
+  pendingAlertLaunch++;
+  stopAudio();
+  clearMemeFlights();
   const ks=Object.keys(activeAlerts);
   ks.forEach(k=>stopOne(k,false));
   if(ks.length)playClear();
@@ -808,6 +855,7 @@ restoreActiveAlerts();
 async function switchCountry(mode){
   clearMemeFlights();
   if(mode===currentCountry)return;
+  pendingAlertLaunch++;
   stopAudio();
   for(const [k,z] of Object.entries(zones)){if(z&&map.hasLayer(z))map.removeLayer(z);delete zones[k]}
   for(const [k,m] of Object.entries(markers)){if(m&&map.hasLayer(m))map.removeLayer(m);delete markers[k]}
