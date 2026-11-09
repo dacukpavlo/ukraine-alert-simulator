@@ -49,7 +49,7 @@
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="style.css?v=20261104-memevoice3">
-  <link rel="stylesheet" href="flight-demo.css?v=20261108-demo2">
+  <link rel="stylesheet" href="flight-demo.css?v=20261109-waves1">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
   <script>
@@ -93,51 +93,51 @@
       <div class="country-switch" role="group" aria-label="Країна">
         <button id="countryUkraine" class="country-button active" type="button" aria-pressed="true">🇺🇦 Україна</button>
         <button id="countryRussia" class="country-button" type="button" aria-pressed="false">🇷🇺 Росія · меми</button>
-        <button id="countryDemo" class="country-button" type="button" aria-pressed="false">🛰️ Польоти · демо</button>
+        <button id="countryDemo" class="country-button" type="button" aria-pressed="false">🎮 Мемні хвилі</button>
       </div>
       <p class="small" id="countryNotice">В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.</p>
       <button id="ruAllQuick" class="ru-quick hidden" type="button">🚨 Запустити тривогу по всій Росії</button>
     </section>
 
-    <section class="card demo-controls hidden" id="demoControls" aria-label="Анімація умовних польотів">
-      <h2>🛰️ Анімація польотів</h2>
-      <p class="demo-helper">Справжня карта України та сусідньої Росії з містами й супутниковим виглядом. Унизу — художні польоти в умовних секторах, без реальних цілей та маршрутів.</p>
-      <label for="demoObject">Об’єкт на карті</label>
+    <section class="card demo-controls hidden" id="demoControls" aria-label="Ігрові мемні хвилі">
+      <h2>🎮 Мемні хвилі</h2>
+      <p class="wave-intro">Обирай смішні об’єкти й запускай їх поступовими хвилями на ігровій карті. Реальних цілей, маршрутів чи ударів тут немає.</p>
+      <label for="demoObject">Хто летить?</label>
       <select id="demoObject">
-        <option value="neptune">🚀 Нептун · стилізована іконка</option>
-        <option value="flamingo">✈️ Фламінго · стилізована іконка</option>
-        <option value="palianytsia">🛩️ Паляниця · стилізована іконка</option>
-        <option value="drone">🛸 Безпілотник · стилізована іконка</option>
-        <option value="rocket">🚀 Ракета · стилізована іконка</option>
+        <option value="geese">🪿 Українські бойові гуси</option>
+        <option value="ghost">👻 Привиди Бандери</option>
+        <option value="ufo">🛸 Українські НЛО</option>
+        <option value="varenyky">🥟 Вареники</option>
+        <option value="borsch">🥣 Борщ</option>
+        <option value="watermelon">🍉 Херсонські кавуни</option>
+        <option value="witch">🧹 Конотопські відьми</option>
+        <option value="mixed">🎭 Усі меми впереміш</option>
       </select>
-      <div id="demoObjectPreview" class="demo-object-preview" aria-live="polite"></div>
-      <label for="demoQuantity">Кількість умовних об’єктів</label>
-      <select id="demoQuantity">
-        <option value="1">1 об’єкт</option>
-        <option value="3" selected>3 об’єкти</option>
-        <option value="6">6 об’єктів</option>
-        <option value="9">9 об’єктів</option>
-        <option value="12">12 об’єктів</option>
+      <div class="wave-form-grid">
+        <div><label for="demoWaves">Кількість хвиль</label>
+          <select id="demoWaves"><option value="1">1 хвиля</option><option value="3" selected>3 хвилі</option><option value="5">5 хвиль</option><option value="10">10 хвиль</option></select>
+        </div>
+        <div><label for="demoQuantity">Об’єктів у хвилі</label>
+          <select id="demoQuantity"><option value="3">3</option><option value="6" selected>6</option><option value="9">9</option><option value="12">12</option></select>
+        </div>
+      </div>
+      <label for="demoPace">Темп запусків</label>
+      <select id="demoPace">
+        <option value="8000">🐢 Повільно · раз на 8 сек.</option>
+        <option value="5000" selected>⏱️ Звичайно · раз на 5 сек.</option>
+        <option value="3000">⚡ Швидше · раз на 3 сек.</option>
       </select>
-      <label for="demoVisual">Стиль фону</label>
-      <select id="demoVisual">
-        <option value="grid">🗺️ Звичайна карта (OpenStreetMap)</option>
-        <option value="satellite">🛰️ Супутникова карта (Esri)</option>
-      </select>
-      <div class="demo-actions">
-        <button type="button" id="demoStart">▶ Запустити</button>
+      <label for="demoVisual">Вигляд карти</label>
+      <select id="demoVisual"><option value="map">🗺️ Звичайна карта</option><option value="dark">🌙 Темна карта</option></select>
+      <div class="wave-actions">
+        <button type="button" id="demoStart" class="wave-primary">▶ Запустити хвилі</button>
+        <button type="button" id="demoNextWave">＋ Наступна хвиля</button>
         <button type="button" id="demoPause">⏸ Пауза</button>
         <button type="button" id="demoReset">↺ Очистити</button>
       </div>
-      <div class="demo-summary" aria-label="Статистика демонстрації">
-        <div class="demo-stat"><b id="demoLaunched">0</b><small>Запущено</small></div>
-        <div class="demo-stat"><b id="demoActive">0</b><small>У русі</small></div>
-        <div class="demo-stat"><b id="demoIntercepted">0</b><small>Умовно перехоплено</small></div>
-        <div class="demo-stat"><b id="demoFinished">0</b><small>Завершили маршрут</small></div>
-      </div>
-      <p class="demo-helper">🗺️ Реальна географія показується окремо від умовних польотів. Статистика нижче стосується тільки демонстраційного режиму.</p>
-      <p class="demo-helper">📜 Журнал анімації</p>
-      <ul id="demoLog" aria-live="polite"><li>Натисніть «Запустити», щоб почати.</li></ul>
+      <p class="wave-disclaimer">🎭 Усі об’єкти та хвилі вигадані, рухаються декоративно і не відповідають реальним подіям.</p>
+      <h3 class="wave-log-title">Журнал хвиль</h3>
+      <ul id="demoLog" aria-live="polite"><li>Обери мем і натисни «Запустити хвилі».</li></ul>
     </section>
 
     <section class="card mode-card" id="ukraineLiveCard">
@@ -229,41 +229,31 @@
   </aside>
 
   <main class="map-area">
-    <section id="flightDemoStage" class="flight-demo-stage" aria-label="Географічна карта і окрема демонстраційна анімація">
-      <div class="demo-stage-head">
-        <div>
-          <h2>🛰️ Карта України та сусідніх територій</h2>
-          <p id="demoStatus">Готово до запуску</p>
-        </div>
-        <div class="demo-demo-badge">КАРТА СПРАВЖНЯ · ПОЛЬОТИ УМОВНІ</div>
+    <section id="flightDemoStage" class="flight-demo-stage" aria-label="Мемні хвилі на декоративній карті">
+      <div class="wave-header">
+        <div><div class="wave-overline">UA ALERT MAP / ГРА</div><h2>МЕМНІ ХВИЛІ <span>🇺🇦 → 🎭</span></h2>
+          <p id="demoStatus" aria-live="polite">Готово до запуску</p></div>
+        <div class="wave-mode-badge">УМОВНІ ОБ’ЄКТИ · БЕЗ РЕАЛЬНИХ ЦІЛЕЙ</div>
       </div>
-      <div class="demo-geo-window">
-        <div id="demoGeoMap" aria-label="Інтерактивна карта України та сусідньої території Росії"></div>
-        <div class="demo-geo-hint">🗺️ Пересувай карту та змінюй масштаб · стиль вибирається ліворуч</div>
-      </div>
-      <div class="demo-sim-window">
-        <div class="demo-sim-heading">
-          <b>✦ Анімація об’єктів</b>
-          <small>Окрема схема · не прив’язана до міст або координат на карті</small>
+      <div class="wave-map-window">
+        <div id="demoGeoMap" aria-label="Географічна карта Росії для фонової візуалізації"></div>
+        <div class="wave-tint" aria-hidden="true"></div>
+        <div id="waveOverlay" aria-hidden="true">
+          <div class="wave-radar"></div>
+          <div class="wave-fictional-site ws-one"><span>🥟</span><b>Пельменний сектор</b></div>
+          <div class="wave-fictional-site ws-two"><span>🪿</span><b>Гусячий сектор</b></div>
+          <div class="wave-fictional-site ws-three"><span>🍉</span><b>Кавуновий сектор</b></div>
+          <div id="waveSprites"></div>
         </div>
-        <div class="demo-world" id="demoWorld">
-          <div class="demo-radar" aria-hidden="true"></div>
-          <svg id="demoPaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M17 71 Q41 12 73 21"></path>
-            <path d="M17 71 Q41 28 82 48"></path>
-            <path d="M17 71 Q41 44 71 73"></path>
-          </svg>
-          <div class="demo-node start" style="left:17%;top:71%"><i></i><b>Умовний старт</b></div>
-          <div class="demo-node" style="left:73%;top:21%"><i></i><b>Логістичний сектор</b></div>
-          <div class="demo-node" style="left:82%;top:48%"><i></i><b>Технічний сектор</b></div>
-          <div class="demo-node" style="left:71%;top:73%"><i></i><b>Промисловий сектор</b></div>
-          <div id="demoFlights" aria-hidden="true"></div>
-          <div class="demo-world-footer">
-            <span><strong>●</strong> Траєкторії художні</span>
-            <span>Без координат цілей</span>
-          </div>
+        <div class="wave-scoreboard">
+          <div><b id="demoWaveCount">0</b><small>Хвилі</small></div>
+          <div><b id="demoLaunched">0</b><small>Запущено</small></div>
+          <div><b id="demoActive">0</b><small>У русі</small></div>
+          <div><b id="demoFinished">0</b><small>Завершено</small></div>
         </div>
+        <div id="waveTicker" class="wave-ticker">🎮 Вибери кількість і запускай хвилі</div>
       </div>
+      <div class="wave-footer"><span>🌍 Географія — фон • траєкторії декоративні</span><span>Інтерактивна мемна гра</span></div>
     </section>
     <div id="map"></div>
     <div id="banner" class="banner hidden"></div>
@@ -304,6 +294,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js?v=20261108-audiofix2"></script>
-<script src="flight-demo.js?v=20261108-demo2"></script>
+<script src="flight-demo.js?v=20261109-waves1"></script>
 </body>
 </html>
