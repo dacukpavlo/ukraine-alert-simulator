@@ -1,278 +1,258 @@
-/* UA Alert Map: geographic basemap is real, flight animation is independently fictional.
-   No flight or impact position is georeferenced, and no real locations are targeted. */
+/* UA Alert Map — decorative meme waves. No real destinations, routes, or targeting. */
 (function(){
-  "use strict";
+  'use strict';
   const $=id=>document.getElementById(id);
   const tab=$('countryDemo'),ukr=$('countryUkraine'),rus=$('countryRussia');
   const controls=$('demoControls'),stage=$('flightDemoStage');
-  const world=$('demoWorld'),sprites=$('demoFlights');
-  if(!tab||!controls||!stage||!world||!sprites)return;
+  const spriteLayer=$('waveSprites'),ticker=$('waveTicker');
+  if(!tab||!controls||!stage||!spriteLayer)return;
 
-  const types={
-    neptune:{title:'Нептун',style:'arrow',tone:'#8ee4fc',description:'Умовний символ об’єкта на схемі'},
-    flamingo:{title:'Фламінго',style:'wing',tone:'#f1a8ee',description:'Стилізований літальний об’єкт'},
-    palianytsia:{title:'Паляниця',style:'dart',tone:'#ffda97',description:'Малюнок для художнього сценарію'},
-    drone:{title:'Дрон',style:'rotor',tone:'#a4f1d0',description:'Універсальна декоративна іконка'},
-    rocket:{title:'Ракета',style:'meteor',tone:'#b1caff',description:'Абстрактна анімаційна іконка'}
+  const catalog={
+    geese:{emoji:'🪿',label:'Бойові гуси'},
+    ghost:{emoji:'👻',label:'Привиди Бандери'},
+    ufo:{emoji:'🛸',label:'Українські НЛО'},
+    varenyky:{emoji:'🥟',label:'Вареники'},
+    borsch:{emoji:'🥣',label:'Борщ'},
+    watermelon:{emoji:'🍉',label:'Херсонські кавуни'},
+    witch:{emoji:'🧹',label:'Конотопські відьми'}
   };
-  const zones=[
-    {name:'Логістичний сектор',x:.73,y:.21},
-    {name:'Технічний сектор',x:.82,y:.48},
-    {name:'Промисловий сектор',x:.71,y:.73}
-  ];
-  const origin={x:.17,y:.71};
-  const state={running:false,paused:false,active:[],pending:[],launched:0,intercepted:0,finished:0,last:0,raf:0,serial:0};
-  const reduced=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  let geoMap=null,vectorLayer=null,imageryLayer=null,labelLayer=null,sourceStyle='grid';
-
-  // Static, hand-drawn non-technical pictograms; no photographs or technical specifications.
-  const silhouettes={
-    arrow:'<path d="M6 32 L76 27 L94 21 L76 17 L6 12 L19 23 Z" fill="currentColor" opacity=".9"/><path d="M18 22 L55 22" fill="none" stroke="#143854" stroke-width="3"/>',
-    wing:'<path d="M8 31 L43 27 L58 8 L65 8 L59 28 L93 35 L93 41 L55 37 L39 48 L29 48 L39 35 Z" fill="currentColor" opacity=".92"/>',
-    dart:'<path d="M4 38 L92 11 L72 41 L53 36 L33 48 L25 47 L41 33 Z" fill="currentColor"/><path d="M42 33 L75 26" stroke="#143854" stroke-width="3"/>',
-    rotor:'<rect x="38" y="20" width="26" height="16" rx="8" fill="currentColor"/><path d="M21 15 L75 43 M75 15 L21 43" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="20" cy="14" r="9" stroke="currentColor" fill="none" stroke-width="3"/><circle cx="76" cy="14" r="9" stroke="currentColor" fill="none" stroke-width="3"/><circle cx="20" cy="44" r="9" stroke="currentColor" fill="none" stroke-width="3"/><circle cx="76" cy="44" r="9" stroke="currentColor" fill="none" stroke-width="3"/>',
-    meteor:'<path d="M7 32 Q32 20 48 25 L79 13 Q90 13 94 25 Q92 35 79 37 L48 31 Q28 37 7 32 Z" fill="currentColor"/><path d="M32 20 L11 9 M31 38 L11 49" stroke="#f9d68c" stroke-width="4" stroke-linecap="round"/>'
-  };
-  function illustration(type){
-    const data=types[type]||types.drone;
-    return '<svg viewBox="0 0 100 58" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="color:'+data.tone+'">'+silhouettes[data.style]+'</svg>';
-  }
-  function updatePreview(){
-    const type=$('demoObject').value;
-    const info=types[type]||types.drone;
-    const preview=$('demoObjectPreview');
-    preview.innerHTML=illustration(type);
-    const text=document.createElement('div'),title=document.createElement('b'),note=document.createElement('small');
-    title.textContent=info.title;
-    note.textContent=info.description+' · не фотографія реальної техніки';
-    text.append(title,note);
-    preview.append(text);
-  }
-  function stats(){
-    $('demoLaunched').textContent=state.launched;
-    $('demoIntercepted').textContent=state.intercepted;
-    $('demoFinished').textContent=state.finished;
-    $('demoActive').textContent=state.active.length;
-  }
-  function notice(message){
-    const el=document.createElement('li');
-    el.textContent=message;
-    $('demoLog').prepend(el);
+  const kinds=Object.keys(catalog);
+  const reduced=!!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const state={running:false,paused:false,automatic:false,totalWaves:0,waves:0,launched:0,finished:0,active:[],pending:[],elapsed:0,nextDue:0,last:0,raf:0};
+  let geoMap=null,lightLayer=null,darkLayer=null,audioContext=null;
+  
+  function note(message){
+    const li=document.createElement('li');li.textContent=message;
+    $('demoLog').prepend(li);
     while($('demoLog').children.length>7)$('demoLog').lastElementChild.remove();
   }
-  function activeButtons(){
+  function stats(){
+    $('demoWaveCount').textContent=state.waves;
+    $('demoLaunched').textContent=state.launched;
+    $('demoActive').textContent=state.active.length;
+    $('demoFinished').textContent=state.finished;
     $('demoPause').disabled=!state.running;
     $('demoPause').textContent=state.paused?'▶ Продовжити':'⏸ Пауза';
-    $('demoStatus').textContent=state.paused?'Пауза':state.running?'Триває умовна анімація':'Готово до запуску';
+    $('demoStatus').textContent=state.paused?'⏸ На паузі':state.running?'● Мемні хвилі в русі':'Готово до запуску';
   }
-  function ensureGeographicMap(){
-    if(geoMap){
-      window.setTimeout(()=>geoMap.invalidateSize(false),80);
-      return;
-    }
-    if(typeof L==='undefined'){
-      notice('Карта не завантажилася: не вдалося отримати бібліотеку Leaflet.');
-      return;
-    }
-    geoMap=L.map('demoGeoMap',{
-      zoomControl:true,
-      attributionControl:true,
-      maxZoom:17,
-      minZoom:3
-    });
-    vectorLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      maxZoom:19,
-      attribution:'&copy; OpenStreetMap contributors'
-    });
-    imageryLayer=L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {maxZoom:18,attribution:'Imagery &copy; Esri and imagery partners'}
-    );
-    labelLayer=L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-      {maxZoom:18,attribution:'Place labels &copy; Esri'}
-    );
-    vectorLayer.addTo(geoMap);
-    geoMap.fitBounds([[44,21],[61,63]],{padding:[20,20],animate:false});
-    const selected=$('demoVisual').value;
-    setMapStyle(selected);
-    window.setTimeout(()=>geoMap.invalidateSize(false),80);
+  function showTicker(message){ticker.textContent=message;}
+  function sound(){
+    // Lighthearted short UI sound; never real warning tones.
+    try{
+      const Audio=window.AudioContext||window.webkitAudioContext;
+      if(!Audio)return;
+      if(!audioContext)audioContext=new Audio();
+      if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+      const t=audioContext.currentTime;
+      [330,440,550].forEach((freq,i)=>{
+        const o=audioContext.createOscillator(),g=audioContext.createGain();
+        o.type='sine';o.frequency.value=freq;
+        g.gain.setValueAtTime(.0001,t+i*.10);
+        g.gain.exponentialRampToValueAtTime(.045,t+i*.10+.015);
+        g.gain.exponentialRampToValueAtTime(.0001,t+i*.10+.12);
+        o.connect(g);g.connect(audioContext.destination);
+        o.start(t+i*.10);o.stop(t+i*.10+.13);
+      });
+    }catch(e){}
   }
-  function setMapStyle(style){
-    sourceStyle=style;
+  function ensureMap(){
+    if(geoMap){setTimeout(()=>geoMap.invalidateSize(false),60);return;}
+    if(typeof L==='undefined'){note('Фонову карту не завантажено, але мемні хвилі працюють.');return;}
+    geoMap=L.map('demoGeoMap',{zoomControl:true,attributionControl:true,scrollWheelZoom:false,minZoom:2,maxZoom:12});
+    lightLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'&copy; OpenStreetMap contributors',maxZoom:19
+    });
+    darkLayer=L.tileLayer('https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:19
+    });
+    lightLayer.addTo(geoMap);
+    geoMap.setView([58,72],3,{animate:false});
+    updateMapStyle();
+    setTimeout(()=>geoMap.invalidateSize(false),100);
+  }
+  function updateMapStyle(){
     if(!geoMap)return;
-    if(style==='satellite'){
-      if(geoMap.hasLayer(vectorLayer))geoMap.removeLayer(vectorLayer);
-      if(!geoMap.hasLayer(imageryLayer))imageryLayer.addTo(geoMap);
-      if(!geoMap.hasLayer(labelLayer))labelLayer.addTo(geoMap);
-    }else{
-      if(geoMap.hasLayer(labelLayer))geoMap.removeLayer(labelLayer);
-      if(geoMap.hasLayer(imageryLayer))geoMap.removeLayer(imageryLayer);
-      if(!geoMap.hasLayer(vectorLayer))vectorLayer.addTo(geoMap);
-    }
+    const dark=$('demoVisual').value==='dark';
+    if(dark){if(geoMap.hasLayer(lightLayer))geoMap.removeLayer(lightLayer);darkLayer.addTo(geoMap);}
+    else{if(geoMap.hasLayer(darkLayer))geoMap.removeLayer(darkLayer);lightLayer.addTo(geoMap);}
+    stage.querySelector('.wave-map-window').classList.toggle('is-dark',dark);
   }
-  function refreshMapSize(){
-    if(geoMap)window.setTimeout(()=>geoMap.invalidateSize(false),80);
-  }
-  function reset(showNotice=true){
-    state.running=false;state.paused=false;
-    state.active=[];state.pending=[];
-    state.launched=0;state.intercepted=0;state.finished=0;
+  function cleanupSprite(item){if(item.node)item.node.remove();}
+  function reset(log=true){
     cancelAnimationFrame(state.raf);
-    state.raf=0;state.last=0;state.serial++;
-    sprites.replaceChildren();
-    if(showNotice){
-      $('demoLog').replaceChildren();
-      notice('Анімацію очищено. Оберіть новий сценарій.');
+    state.raf=0;state.running=false;state.paused=false;state.automatic=false;
+    state.totalWaves=0;state.waves=0;state.launched=0;state.finished=0;
+    state.elapsed=0;state.nextDue=0;state.last=0;
+    state.pending.length=0;
+    state.active.forEach(cleanupSprite);state.active.length=0;
+    spriteLayer.replaceChildren();
+    if(log){$('demoLog').replaceChildren();note('Очищено. Можна запускати нові хвилі.');}
+    showTicker('🎮 Вибери кількість і запускай хвилі');
+    stats();
+  }
+  function chooseKind(index){
+    const selected=$('demoObject').value;
+    const name=selected==='mixed'?kinds[(index+Math.floor(Math.random()*kinds.length))%kinds.length]:selected;
+    return catalog[name]||catalog.geese;
+  }
+  function enqueueWave(){
+    const count=Math.max(1,Math.min(12,Number($('demoQuantity').value)||6));
+    const number=++state.waves;
+    for(let i=0;i<count;i++){
+      state.pending.push({
+        at:state.elapsed+i*190,
+        index:i,
+        wave:number,
+        def:chooseKind(i+number),
+        travel:reduced?800:5400+(i%4)*620
+      });
     }
-    stats();activeButtons();
+    showTicker('🌊 Хвиля №'+number+' • '+count+' мемних об’єктів');
+    note('🌊 Хвиля №'+number+': '+count+' об’єктів поступово з’являються на ігровій карті.');
+    sound();
+    stats();
   }
-  function leaveDemo(destination){
-    if(!document.body.classList.contains('demo-mode'))return;
+  function begin(){
     reset(false);
-    document.body.classList.remove('demo-mode');
-    controls.classList.add('hidden');
-    tab.classList.remove('active');
-    tab.setAttribute('aria-pressed','false');
-    const r=destination==='ru';
-    (r?rus:ukr).classList.add('active');
-    (r?ukr:rus).classList.remove('active');
-    $('countryChip').textContent=r?'Росія · меми':'Україна';
-    $('countryNotice').textContent=r
-      ?'Увімкни тривогу для міста, області або всієї Росії. Це мемний ручний режим, не реальні повідомлення.'
-      :'В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.';
-    $('ruAllQuick').classList.toggle('hidden',!r);
-    $('panelModeTitle').textContent=r?'Мемна карта Росії':'Керування картою';
-    window.setTimeout(()=>{
-      try{map.invalidateSize(false)}catch(e){}
-    },80);
+    $('demoLog').replaceChildren();
+    state.running=true;state.automatic=true;state.paused=false;
+    state.totalWaves=Math.min(10,Math.max(1,Number($('demoWaves').value)||3));
+    state.nextDue=0;
+    note('▶ Запускаються '+state.totalWaves+' мемні хвилі. Маршрути декоративні.');
+    state.raf=requestAnimationFrame(tick);
+    stats();
+    if(window.innerWidth<850)stage.scrollIntoView({behavior:'smooth',block:'start'});
   }
-  ukr.addEventListener('click',()=>leaveDemo('ua'),true);
-  rus.addEventListener('click',()=>leaveDemo('ru'),true);
-  tab.addEventListener('click',()=>{
-    if(document.body.classList.contains('demo-mode'))return;
-    try{stopAudio()}catch(e){}
-    try{clearMemeFlights()}catch(e){}
-    document.body.classList.add('demo-mode');
-    controls.classList.remove('hidden');
-    ukr.classList.remove('active');rus.classList.remove('active');
-    tab.classList.add('active');
-    ukr.setAttribute('aria-pressed','false');
-    rus.setAttribute('aria-pressed','false');
-    tab.setAttribute('aria-pressed','true');
-    $('countryChip').textContent='🛰️ Карта та польоти';
-    $('countryNotice').textContent='На верхній карті реальні міста; польоти й умовні сектори нижче не прив’язані до географії.';
-    $('ruAllQuick').classList.add('hidden');
-    $('panelModeTitle').textContent='Карта та анімація';
-    ensureGeographicMap();
-    notice('Відкрито карту України й сусідніх територій. Польоти показані на окремій схемі.');
-  });
-
-  // These points are fractions of the independent schematic canvas, NOT geographic coordinates.
-  function position(f,p){
-    const z=zones[f.zone],c={x:.41,y:.12+(f.zone*.16)};
-    const q=1-p;
-    return {
-      x:q*q*origin.x+2*q*p*c.x+p*p*z.x,
-      y:q*q*origin.y+2*q*p*c.y+p*p*z.y
-    };
+  function nextWave(){
+    if(!state.running){
+      reset(false);
+      state.running=true;state.automatic=false;
+      state.raf=requestAnimationFrame(tick);
+    }
+    if(state.paused)state.paused=false;
+    enqueueWave();
+    stats();
+    if(window.innerWidth<850)stage.scrollIntoView({behavior:'smooth',block:'start'});
   }
   function spawn(item){
-    const def=types[item.type];
     const node=document.createElement('div');
-    node.className='demo-flyer';
-    const sprite=document.createElement('div');
-    sprite.className='demo-sprite';
-    sprite.innerHTML=illustration(item.type);
-    const label=document.createElement('span');
-    label.textContent=def.title;
-    node.append(sprite,label);
-    sprites.append(node);
-    state.active.push({
-      type:item.type,
-      zone:item.zone,
-      node,
-      progress:0,
-      duration:reduced?1:6.5+Math.random()*3,
-      intercepted:Math.random()<.28
-    });
+    node.className='wave-flyer';
+    const icon=document.createElement('div'),caption=document.createElement('span');
+    icon.className='wave-emoji';icon.textContent=item.def.emoji;
+    caption.className='wave-name';caption.textContent=item.def.label;
+    node.append(icon,caption);
+    spriteLayer.append(node);
+    item.node=node;
+    item.progress=0;
+    // These screen percentages are independent of Leaflet and never geographic coordinates.
+    item.startY=19+(item.index%6)*12+(item.wave%2)*3;
+    item.endY=Math.min(83,item.startY+8+(item.index%3)*3);
+    item.curve=(item.index%2?1:-1)*(9+(item.wave%3)*3);
+    state.active.push(item);
     state.launched++;
-    stats();
-    notice('▶ '+def.title+': запущено умовну анімацію.');
-  }
-  function finish(f){
-    f.node.remove();
-    if(f.intercepted)state.intercepted++;else state.finished++;
-    const p=position(f,f.intercepted?.77:1);
-    const halo=document.createElement('div');
-    halo.className='demo-finish '+(f.intercepted?'intercepted':'');
-    halo.style.left=(p.x*100)+'%';
-    halo.style.top=(p.y*100)+'%';
-    sprites.append(halo);
-    window.setTimeout(()=>halo.remove(),950);
-    notice((f.intercepted?'◇ Умовно перехоплено':'✓ Досягнуто умовного сектору')+': '+zones[f.zone].name+'.');
+    draw(item);
     stats();
   }
-  function render(f){
-    const p=position(f,Math.min(1,f.progress));
-    f.node.style.left=(p.x*100)+'%';
-    f.node.style.top=(p.y*100)+'%';
+  function draw(item){
+    const p=Math.min(1,item.progress);
+    const x=-7+p*114;
+    const y=item.startY+(item.endY-item.startY)*p+Math.sin(p*Math.PI)*item.curve;
+    item.node.style.left=x.toFixed(2)+'%';
+    item.node.style.top=y.toFixed(2)+'%';
+    item.node.style.opacity=String(Math.min(1,p*12,(1-p)*10));
+    item.node.style.transform='translate(-50%,-50%) rotate('+(Math.sin(p*6)*7).toFixed(1)+'deg)';
+  }
+  function finish(item){
+    cleanupSprite(item);
+    state.finished++;
+    if(!reduced){
+      const star=document.createElement('div');
+      star.className='wave-sparkle';star.textContent='✨';
+      star.style.left='90%';star.style.top=Math.min(86,item.endY)+'%';
+      spriteLayer.append(star);
+      setTimeout(()=>star.remove(),1000);
+    }
+    stats();
   }
   function tick(t){
     if(!state.running)return;
     if(!state.last)state.last=t;
-    const dt=Math.min(.055,(t-state.last)/1000);
+    const dt=Math.min(80,Math.max(0,t-state.last));
     state.last=t;
     if(!state.paused){
+      state.elapsed+=dt;
+      if(state.automatic&&state.waves<state.totalWaves&&state.elapsed>=state.nextDue){
+        enqueueWave();
+        state.nextDue=state.elapsed+Math.max(3000,Number($('demoPace').value)||5000);
+      }
       for(let i=state.pending.length-1;i>=0;i--){
-        const job=state.pending[i];
-        job.wait-=dt;
-        if(job.wait<=0){state.pending.splice(i,1);spawn(job)}
+        const item=state.pending[i];
+        if(item.at<=state.elapsed){state.pending.splice(i,1);spawn(item);}
       }
       for(let i=state.active.length-1;i>=0;i--){
-        const f=state.active[i];
-        f.progress+=dt/f.duration;
-        if((f.intercepted&&f.progress>=.77)||f.progress>=1){
+        const item=state.active[i];
+        item.progress+=dt/item.travel;
+        if(item.progress>=1){
           state.active.splice(i,1);
-          finish(f);
-        }else render(f);
+          finish(item);
+        }else draw(item);
       }
-      if(!state.pending.length&&!state.active.length){
-        state.running=false;state.last=0;activeButtons();
-        notice('Сценарій завершено. Статистика умовна.');
+      if(!state.pending.length&&!state.active.length&&(!state.automatic||state.waves>=state.totalWaves)){
+        state.running=false;state.last=0;
+        showTicker('✅ Усі мемні об’єкти завершили рух');
+        note('✅ Мемний раунд завершено. Жодних справжніх польотів.');
+        stats();
         return;
       }
     }
     state.raf=requestAnimationFrame(tick);
   }
-  function launch(){
-    if(state.running){
-      if(state.paused){state.paused=false;activeButtons()}
-      return;
-    }
-    const type=$('demoObject').value,count=Number($('demoQuantity').value);
-    if(!types[type]||!Number.isFinite(count)||count<1)return;
-    const total=Math.min(12,count);
-    state.pending=Array.from({length:total},(_,i)=>({
-      type:type,
-      zone:i%zones.length,
-      wait:.1+i*.6
-    }));
-    state.running=true;state.paused=false;state.last=0;
-    activeButtons();
-    notice('Підготовлено '+total+' умовних об’єктів. Вони не нанесені на географічну карту.');
-    state.raf=requestAnimationFrame(tick);
+  function exitDemo(destination){
+    if(!document.body.classList.contains('demo-mode'))return;
+    reset(false);
+    document.body.classList.remove('demo-mode');
+    controls.classList.add('hidden');
+    tab.classList.remove('active');tab.setAttribute('aria-pressed','false');
+    const ru=destination==='ru';
+    (ru?rus:ukr).classList.add('active');
+    (ru?ukr:rus).classList.remove('active');
+    $('countryChip').textContent=ru?'Росія · меми':'Україна';
+    $('countryNotice').textContent=ru
+      ?'Увімкни тривогу для міста, області або всієї Росії. Це мемний ручний режим.'
+      :'В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.';
+    $('ruAllQuick').classList.toggle('hidden',!ru);
+    $('panelModeTitle').textContent=ru?'Мемна карта Росії':'Керування картою';
+    setTimeout(()=>{try{map.invalidateSize(false);}catch(e){}},80);
   }
-  $('demoStart').addEventListener('click',launch);
+  ukr.addEventListener('click',()=>exitDemo('ua'),true);
+  rus.addEventListener('click',()=>exitDemo('ru'),true);
+  tab.addEventListener('click',()=>{
+    if(document.body.classList.contains('demo-mode'))return;
+    try{stopAudio();}catch(e){}
+    try{clearMemeFlights();}catch(e){}
+    document.body.classList.add('demo-mode');
+    controls.classList.remove('hidden');
+    ukr.classList.remove('active');rus.classList.remove('active');
+    tab.classList.add('active');
+    ukr.setAttribute('aria-pressed','false');rus.setAttribute('aria-pressed','false');
+    tab.setAttribute('aria-pressed','true');
+    $('countryChip').textContent='🎮 Мемні хвилі';
+    $('countryNotice').textContent='Ігровий режим: усі хвилі вигадані та не позначають справжні події.';
+    $('ruAllQuick').classList.add('hidden');
+    $('panelModeTitle').textContent='Керування мемними хвилями';
+    ensureMap();
+    note('🎮 Відкрито режим мемних хвиль. Обери об’єкти й кількість хвиль.');
+  });
+  $('demoStart').addEventListener('click',begin);
+  $('demoNextWave').addEventListener('click',nextWave);
   $('demoPause').addEventListener('click',()=>{
     if(!state.running)return;
     state.paused=!state.paused;
-    activeButtons();
+    showTicker(state.paused?'⏸ Хвилі на паузі':'▶ Хвилі продовжуються');
+    stats();
   });
   $('demoReset').addEventListener('click',()=>reset(true));
-  $('demoVisual').addEventListener('change',e=>setMapStyle(e.target.value));
-  $('demoObject').addEventListener('change',updatePreview);
-  window.addEventListener('resize',refreshMapSize,{passive:true});
-  updatePreview();
-  stats();activeButtons();
+  $('demoVisual').addEventListener('change',updateMapStyle);
+  window.addEventListener('resize',()=>{if(geoMap)setTimeout(()=>geoMap.invalidateSize(false),80)},{passive:true});
+  stats();
 })();
