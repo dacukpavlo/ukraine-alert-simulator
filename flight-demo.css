@@ -1,225 +1,85 @@
-
-/* Standalone fictional flight visualization; not a geographical attack map. */
-.country-switch{grid-template-columns:repeat(3,minmax(0,1fr))}
-#countryDemo{font-size:12px;background:#1b2941;border-color:#5a77a1}
-#countryDemo.active{background:linear-gradient(135deg,#2456a5,#674bb5);color:#fff;border-color:#a0c6ff}
-.demo-mode .panel > :not(.panel-heading):not(.country-switch-card):not(#demoControls){display:none!important}
-.demo-mode .panel-heading small{font-size:11px}
-.demo-mode #ruAllQuick,.demo-mode #map,.demo-mode #mapSafetyNote,.demo-mode #memeFlightLayer,.demo-mode #alertBanner{display:none!important}
+/* UA Alert Map — fictional meme-wave game. No georeferenced trajectories or targets. */
+.country-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#countryDemo{font-size:12px;background:#1f3152;border:1px solid #5277a6}
+#countryDemo.active{background:linear-gradient(125deg,#205dab,#7044a8);border-color:#a0cfff;color:#fff}
+.demo-mode .panel>:not(.panel-heading):not(.country-switch-card):not(#demoControls){display:none!important}
+.demo-mode #map,.demo-mode #mapSafetyNote,.demo-mode #memeFlightLayer,.demo-mode #banner{display:none!important}
 #demoControls.hidden{display:none!important}
-#demoControls{border-color:#5a6f9b;background:linear-gradient(160deg,#172945,#192338)}
-#demoControls h2{font-size:19px}
-#demoControls .demo-helper{color:#b6cbe6;font-size:12px;line-height:1.55}
-#demoControls label{margin-top:14px}
-#demoControls select{background:#0b172b;border-color:#425a7b}
-.demo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.demo-actions button{flex:1;min-width:82px;font-size:13px;border:1px solid #50719c;color:#fff;background:#253c60}
-#demoStart{background:linear-gradient(120deg,#267df2,#6655d9);border-color:#528dfa}
-#demoReset{background:#253146}
-.demo-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}
-.demo-stat{background:#101c30;padding:12px;border:1px solid #324c6a;border-radius:12px}
-.demo-stat b{display:block;font-size:27px;color:#eef7ff;font-variant-numeric:tabular-nums}
-.demo-stat small{color:#afc6e4;font-size:11px}
-#demoLog{margin:14px 0 0;padding:0;max-height:190px;overflow:auto;list-style:none}
-#demoLog li{padding:7px 0;border-bottom:1px solid #ffffff16;color:#c9d9ee;font-size:12px;line-height:1.35}
-#demoLog li:first-child{color:#fff}
-.flight-demo-stage{display:none;position:relative;flex:1 1 auto;min-height:490px;overflow:hidden;background:#071323;isolation:isolate}
-.demo-mode .flight-demo-stage{display:flex;flex-direction:column}
-.demo-stage-head{position:relative;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:18px 22px;background:linear-gradient(180deg,#071323e8,#071323a0)}
-.demo-stage-head h2{font-size:clamp(20px,2.6vw,28px);margin:0 0 3px}
-.demo-stage-head p{font-size:12px;color:#a7c0d9;margin:0}
-.demo-demo-badge{border:1px solid #7caaff;color:#d0e8ff;border-radius:22px;background:#153257;padding:8px 12px;font-weight:850;font-size:11px;letter-spacing:.05em}
-.demo-world{position:relative;flex:1;overflow:hidden;min-height:365px;background:radial-gradient(circle at 72% 24%,#1d4561 0,#10263b 23%,transparent 53%),radial-gradient(ellipse at 10% 90%,#183d5d,transparent 60%),#071626}
-.demo-world:before{content:"";position:absolute;inset:0;opacity:.52;background-image:linear-gradient(#5893cf17 1px,transparent 1px),linear-gradient(90deg,#5893cf17 1px,transparent 1px);background-size:35px 35px}
-.demo-world:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 34%,#030b15aa 100%);pointer-events:none}
-.demo-world.satellite{background:radial-gradient(ellipse at 20% 32%,#1d4a40 0,#193c37 17%,transparent 45%),radial-gradient(ellipse at 81% 58%,#344b35 0,#1c3b3c 24%,transparent 53%),radial-gradient(ellipse at 40% 90%,#4e5a3b,transparent 50%),#0c2024}
-.demo-world.satellite:before{background-size:45px 45px;opacity:.25}
-.demo-radar{position:absolute;left:25%;top:55%;width:560px;aspect-ratio:1;border:1px solid #65caff20;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 85px #65caff09,0 0 0 175px #65caff09;pointer-events:none}
-.demo-radar:after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 25deg,#6ccaff40,transparent 46deg,transparent);animation:demoSweep 9s linear infinite}
-@keyframes demoSweep{to{transform:rotate(360deg)}}
-#demoPaths{position:absolute;inset:0;width:100%;height:100%;overflow:visible;opacity:.9}
-#demoPaths path{fill:none;stroke:#6cb6ff6b;stroke-width:.35;stroke-dasharray:1.2 1.4;vector-effect:non-scaling-stroke}
-.demo-node{position:absolute;z-index:2;transform:translate(-50%,-50%);width:110px;text-align:center}
-.demo-node i{display:block;margin:auto auto 6px;width:14px;height:14px;border-radius:100%;background:#78bdff;border:3px solid #102b46;box-shadow:0 0 0 8px #57b8ff1c,0 0 20px #57b8ff81}
-.demo-node b{display:inline-block;padding:6px 9px;background:#09253ac7;border-radius:8px;color:#dceeff;font-size:11px;white-space:nowrap;border:1px solid #4d8bb44d}
-.demo-node.start i{background:#ffd48d;box-shadow:0 0 0 8px #ffb56d17,0 0 20px #f4bc6c80}
-.demo-node.start b{color:#ffe1a5}
-#demoFlights{position:absolute;inset:0;z-index:3;pointer-events:none}
-.demo-flyer{position:absolute;left:0;top:0;display:flex;align-items:center;gap:6px;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 9px #0008)}
-.demo-flyer .demo-sprite{display:grid;place-items:center;border-radius:14px;background:#09233cda;border:1px solid #70c0ff8c;box-shadow:0 0 22px #5cb4ff51;width:45px;height:45px;font-size:26px;transform:rotate(-15deg)}
-.demo-flyer span{font-size:10px;color:#fff;background:#10233edb;border:1px solid #5682ad80;padding:4px 6px;border-radius:7px;white-space:nowrap}
-.demo-glow{position:absolute;border-radius:50%;width:70px;height:70px;background:radial-gradient(circle,#86d6ff35,transparent 70%);transform:translate(-50%,-50%);pointer-events:none}
-.demo-finish{position:absolute;z-index:3;transform:translate(-50%,-50%);width:36px;height:36px;border-radius:50%;border:2px solid #95ddff;animation:demoPulse .8s ease-out forwards;pointer-events:none}
-.demo-finish.intercepted{border-color:#f7ad72}
-@keyframes demoPulse{from{opacity:.9;scale:.5}to{opacity:0;scale:4}}
-.demo-world-footer{position:absolute;z-index:4;left:12px;right:12px;bottom:12px;display:flex;gap:6px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.demo-world-footer span{font-size:11px;padding:8px 10px;border-radius:9px;background:#081b2be8;color:#d9eaff;border:1px solid #3c65904d}
-.demo-world-footer strong{color:#8fe5ff}
-@media(max-width:1050px){
+#demoControls{border-color:#4f83b9;background:linear-gradient(145deg,#142943,#152238);box-shadow:0 12px 32px #0003}
+#demoControls h2{font-size:19px;margin:0 0 7px;color:#eaf8ff}
+#demoControls label{display:block;font-size:12px;font-weight:750;color:#cde5ff;margin:13px 0 6px}
+#demoControls select{width:100%;min-height:44px;background:#0b172a;border:1px solid #49668a;border-radius:10px;color:#fff;padding:10px;font-size:13px}
+#demoControls .wave-intro{margin:0;color:#b5cbe2;font-size:12px;line-height:1.55}
+.wave-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wave-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:16px}
+.wave-actions button{border:1px solid #526b8c;border-radius:10px;min-height:48px;padding:9px 5px;background:#243955;color:#edf6ff;font-size:12px;font-weight:850;cursor:pointer}
+.wave-actions button:hover{filter:brightness(1.12)}
+.wave-actions button:focus-visible{outline:3px solid #8cceff;outline-offset:2px}
+.wave-actions .wave-primary{background:linear-gradient(120deg,#1679eb,#5e61e8);border-color:#74a6ff;color:#fff}
+.wave-actions button:disabled{opacity:.5;cursor:not-allowed}
+.wave-disclaimer{font-size:11px;color:#b8d2eb;line-height:1.5;border-left:3px solid #67b7f5;margin:14px 0 0;padding:8px;background:#0d2037}
+.wave-log-title{font-size:13px;margin:17px 0 6px}
+#demoLog{list-style:none;padding:0;margin:0;max-height:170px;overflow:auto}
+#demoLog li{font-size:11px;color:#d3e2f3;padding:8px 4px;border-bottom:1px solid #ffffff16;line-height:1.4}
+.flight-demo-stage{display:none;position:relative;isolation:isolate;flex:1;min-width:0;overflow:hidden;background:#06182c;color:#fff}
+.demo-mode .flight-demo-stage{height:100%;min-height:470px;display:flex;flex-direction:column}
+.wave-header{flex:none;z-index:2;display:flex;gap:15px;align-items:center;justify-content:space-between;padding:17px 22px;background:linear-gradient(105deg,#071b36,#122e54)}
+.wave-overline{font-size:10px;font-weight:900;letter-spacing:.18em;color:#74caff;margin-bottom:5px}
+.wave-header h2{font-size:clamp(19px,3vw,29px);font-weight:950;letter-spacing:.045em;margin:0 0 5px}
+.wave-header h2 span{font-size:.55em;vertical-align:middle}
+.wave-header p{font-size:12px;margin:0;color:#c7daf0}
+.wave-mode-badge{font-size:10px;border:1px solid #6094c0;border-radius:10px;background:#0b3352;padding:9px 12px;max-width:240px;text-align:center;font-weight:900;line-height:1.45}
+.wave-map-window{position:relative;flex:1;min-height:360px;overflow:hidden}
+#demoGeoMap{position:absolute;inset:0;width:100%;height:100%;z-index:0;background:#20344a}
+#demoGeoMap .leaflet-control-attribution{font-size:9px}
+.wave-tint{position:absolute;inset:0;z-index:350;background:linear-gradient(105deg,rgba(3,22,52,.36),transparent 35%,rgba(3,24,51,.14)),linear-gradient(0deg,rgba(8,28,56,.42),transparent 37%);pointer-events:none}
+.wave-map-window.is-dark .wave-tint{background:rgba(2,11,31,.52)}
+#waveOverlay{position:absolute;inset:0;z-index:450;pointer-events:none;overflow:hidden;isolation:isolate}
+.wave-radar{position:absolute;left:44%;top:52%;width:150px;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid #8fd6ff43;border-radius:50%;box-shadow:0 0 0 80px #73bfff0f,0 0 0 170px #73bfff0b,0 0 0 270px #73bfff07;opacity:.72}
+.wave-radar::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,#86ddff44 43deg,transparent 57deg);animation:wave-scan 8s linear infinite}
+@keyframes wave-scan{to{transform:rotate(360deg)}}
+.wave-fictional-site{position:absolute;display:flex;gap:6px;align-items:center;flex-direction:column;transform:translate(-50%,-50%);width:125px;z-index:1;filter:drop-shadow(0 4px 4px #02182caa)}
+.wave-fictional-site>span{display:grid;place-items:center;width:53px;height:53px;font-size:28px;border:2px dashed #ff7a8f;background:#152842d9;border-radius:50%;box-shadow:0 0 0 9px #ef658020}
+.wave-fictional-site>b{display:inline-block;padding:5px 8px;border:1px solid #7dc6ff77;border-radius:7px;background:#0b2042ef;color:#ecf7ff;font-size:10px;text-align:center;line-height:1.25}
+.ws-one{left:72%;top:26%}.ws-two{left:85%;top:53%}.ws-three{left:66%;top:77%}
+#waveSprites{position:absolute;inset:0;z-index:5;pointer-events:none}
+.wave-flyer{position:absolute;left:0;top:0;display:grid;place-items:center;will-change:transform,opacity;transform:translate(-100px,-100px);filter:drop-shadow(0 4px 8px #0008);z-index:4}
+.wave-flyer .wave-emoji{display:grid;place-items:center;width:46px;height:46px;background:radial-gradient(circle,#e7f7ff 0,#9ddcf4aa 53%,#3071b0aa 100%);font-size:30px;border:2px solid #bce8ffb8;border-radius:50%;box-shadow:0 0 18px #81e9ff88}
+.wave-flyer .wave-name{display:none;color:#fff;padding:2px 5px;margin-top:3px;font-size:10px;white-space:nowrap;background:#0d2445ed;border-radius:5px}
+.wave-flyer:nth-child(3n) .wave-name{display:block}
+.wave-sparkle{position:absolute;font-size:29px;transform:translate(-50%,-50%);opacity:0;animation:wave-spark .9s ease-out forwards}
+@keyframes wave-spark{0%{opacity:1;scale:.5}100%{opacity:0;scale:1.8}}
+.wave-scoreboard{position:absolute;left:12px;top:12px;z-index:550;display:flex;gap:7px;padding:9px;background:#071f43e8;border:1px solid #75a6ed9c;border-radius:13px;box-shadow:0 6px 20px #071b3473;pointer-events:none}
+.wave-scoreboard>div{text-align:center;min-width:62px;padding:4px 6px;border-right:1px solid #8dc8fb49}
+.wave-scoreboard>div:last-child{border:0}
+.wave-scoreboard b{display:block;color:#92d6ff;font-size:23px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.3}
+.wave-scoreboard small{font-size:10px;color:#d5e8ff}
+.wave-ticker{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);z-index:550;max-width:85%;min-width:250px;padding:11px 17px;border-radius:12px;background:#061b35e9;border:1px solid #7dbfffbd;box-shadow:0 8px 27px #06182e88;color:#e7f7ff;text-align:center;font-size:13px;font-weight:850;pointer-events:none}
+.wave-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:9px 16px;background:#0e2743;color:#c2ddf6;font-size:11px}
+@media(max-width:850px){
  .country-switch{grid-template-columns:repeat(2,minmax(0,1fr))}
  #countryDemo{grid-column:1/-1}
+ .demo-mode .map-area{height:auto;min-height:0}
+ .demo-mode .flight-demo-stage{height:650px;min-height:650px;flex:none}
+ .wave-header{padding:12px 13px}
+ .wave-header h2{font-size:18px}
+ .wave-mode-badge{font-size:8px;max-width:115px;padding:7px}
+ .wave-map-window{min-height:400px}
+ .wave-scoreboard{top:10px;left:8px;padding:5px;gap:3px}
+ .wave-scoreboard>div{min-width:52px;padding:4px}
+ .wave-scoreboard b{font-size:20px}
+ .wave-scoreboard small{font-size:9px}
+ .wave-fictional-site{width:90px}
+ .wave-fictional-site>b{font-size:8px}
+ .wave-fictional-site>span{width:43px;height:43px;font-size:22px}
+ .ws-one{left:67%;top:37%}.ws-two{left:85%;top:61%}.ws-three{left:54%;top:79%}
+ .wave-flyer .wave-emoji{width:36px;height:36px;font-size:24px}
+ .wave-footer{font-size:9px}
 }
-@media(max-width:850px){
- .demo-mode .map-area{height:auto;min-height:600px}
- .flight-demo-stage{min-height:540px;flex:none;height:65vh}
- .demo-stage-head{padding:12px 14px}
- .demo-radar{width:300px}
- .demo-node{width:82px}
- .demo-node b{font-size:9px}
- .demo-flyer .demo-sprite{width:38px;height:38px;font-size:22px}
- .demo-flyer span{font-size:9px}
- .demo-world-footer span{font-size:9px}
+@media(max-width:400px){
+ .wave-scoreboard>div{min-width:42px}
+ .wave-scoreboard b{font-size:17px}
+ .wave-flyer .wave-name{display:none!important}
+ .wave-ticker{font-size:11px;min-width:0;width:85%}
 }
-@media(prefers-reduced-motion:reduce){
- .demo-radar:after{animation:none}
- .demo-finish{animation-duration:.05s}
-}
-
-
-/* v2: real basemap shown separately from deliberately non-geographic flight graphics */
-.demo-mode .flight-demo-stage{
-  height:100%;
-  min-height:0;
-  display:flex;
-  flex-direction:column;
-}
-.demo-stage-head{
-  flex:none;
-  padding:14px 20px;
-  align-items:center;
-  background:linear-gradient(120deg,#112846,#122036);
-}
-.demo-stage-head h2{font-size:clamp(18px,2vw,24px);margin:0 0 4px}
-.demo-demo-badge{max-width:280px;text-align:center}
-.demo-geo-window{
-  position:relative;
-  flex:1 1 57%;
-  min-height:210px;
-  background:#182e3d;
-  border-bottom:1px solid #4f8dbc60;
-  overflow:hidden;
-}
-#demoGeoMap{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-#demoGeoMap.leaflet-container{background:#10202f}
-.demo-geo-hint{
-  z-index:500;
-  position:absolute;
-  left:12px;
-  top:12px;
-  max-width:calc(100% - 85px);
-  color:#eff7ff;
-  font-size:11px;
-  border:1px solid #96bfeb70;
-  background:#102840e3;
-  padding:7px 10px;
-  border-radius:9px;
-  pointer-events:none;
-  box-shadow:0 5px 20px #0005;
-}
-#demoGeoMap .leaflet-control-attribution{
-  background:#f4f7fce8;
-  color:#16253b;
-  font-size:9px;
-}
-.demo-sim-window{
-  flex:0 0 43%;
-  min-height:215px;
-  display:flex;
-  flex-direction:column;
-  position:relative;
-  overflow:hidden;
-  background:#071626;
-}
-.demo-sim-heading{
-  z-index:2;
-  display:flex;
-  flex:none;
-  gap:8px;
-  align-items:center;
-  justify-content:space-between;
-  padding:7px 16px;
-  border-bottom:1px solid #4c7ea241;
-  background:linear-gradient(90deg,#153758,#0d1e31);
-}
-.demo-sim-heading b{font-size:12px;color:#e2f3ff}
-.demo-sim-heading small{color:#a9c9e1;font-size:10px;text-align:right}
-.demo-sim-window .demo-world{flex:1 1 auto;min-height:0}
-.demo-sim-window .demo-radar{width:min(38vw,290px)}
-.demo-sim-window .demo-world:after{pointer-events:none}
-.demo-sim-window .demo-node{width:125px}
-.demo-sim-window .demo-node b{font-size:10px;padding:4px 7px}
-.demo-sim-window .demo-node i{width:10px;height:10px;margin-bottom:2px}
-.demo-sim-window .demo-world-footer{bottom:6px}
-.demo-sim-window .demo-world-footer span{padding:5px 8px;font-size:9px}
-.demo-object-preview{
-  display:flex;
-  gap:13px;
-  align-items:center;
-  border:1px solid #55799b;
-  background:linear-gradient(110deg,#172d47,#101d30);
-  border-radius:12px;
-  padding:10px 12px;
-  margin:10px 0 7px;
-}
-.demo-object-preview svg{
-  flex:none;
-  width:86px;
-  height:54px;
-  display:block;
-  filter:drop-shadow(0 4px 10px #1118);
-}
-.demo-object-preview b{
-  display:block;
-  font-size:13px;
-  color:#edf6ff;
-}
-.demo-object-preview small{
-  display:block;
-  font-size:10px;
-  color:#a7bed3;
-  line-height:1.35;
-  margin-top:4px;
-}
-.demo-flyer .demo-sprite{
-  width:62px;
-  height:40px;
-  border-radius:12px;
-  background:#0b1b2be8;
-  display:flex;
-}
-.demo-flyer .demo-sprite svg{
-  width:60px;
-  height:38px;
-  display:block;
-  transform:rotate(-7deg);
-}
-.demo-flyer>span{
-  font-size:10px;
-  font-weight:700;
-}
-.demo-world-footer span{backdrop-filter:blur(5px)}
-#demoPause:disabled{opacity:.5;cursor:not-allowed}
-@media(min-width:900px){
-  .demo-mode .flight-demo-stage{min-height:500px}
-}
-@media(max-width:850px){
-  .demo-mode .map-area{height:auto;min-height:0}
-  .demo-mode .flight-demo-stage{
-    height:760px;
-    min-height:760px;
-    flex:none;
-  }
-  .demo-stage-head{padding:12px}
-  .demo-demo-badge{font-size:9px;padding:6px 8px;max-width:138px}
-  .demo-geo-window{min-height:0;flex:1 1 auto}
-  .demo-sim-window{flex:0 0 320px;min-height:320px}
-  .demo-sim-heading{align-items:flex-start;flex-direction:column;gap:1px;padding:8px 12px}
-  .demo-sim-heading small{text-align:left}
-  .demo-sim-window .demo-node{width:85px}
-  .demo-sim-window .demo-node b{font-size:8px;padding:4px 4px}
-  .demo-flyer .demo-sprite{width:43px;height:31px}
-  .demo-flyer .demo-sprite svg{width:42px;height:29px}
-  .demo-flyer>span{font-size:9px}
-  .demo-geo-hint{top:8px;left:8px;max-width:calc(100% - 110px);font-size:9px}
-  .demo-object-preview svg{width:74px;height:46px}
-}
+@media(prefers-reduced-motion:reduce){.wave-radar::before{animation:none}.wave-sparkle{animation-duration:.1s}}
