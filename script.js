@@ -59,11 +59,14 @@ function volume(){return +document.getElementById('volumeRange').value/100}
 // Attached clips now belong to threat types in the existing dropdown.
 // The first three were unnamed in their videos, so their mapping can be refined later.
 const recordedThreatAudio={
-  air:'audio/user-sound-1.mp3',
-  drone:'audio/user-sound-2.mp3',
-  missile:'audio/user-sound-3.mp3',
-  chemical:'audio/user-sound-4.mp3',
-  radiation:'audio/user-sound-5.mp3'
+  air:'audio/ua-air.mp3',
+  artillery:'audio/ua-artillery.mp3',
+  street1:'audio/ua-street1.ogg',
+  street2:'audio/ua-street2.ogg',
+  chemical:'audio/ua-chemical.mp3',
+  radiation:'audio/ua-radiation.mp3',
+  high:'audio/ua-high.ogg',
+  allclear:'audio/ua-allclear.ogg'
 };
 let syntheticContext=null;
 let syntheticOscillators=[];
@@ -76,21 +79,17 @@ function stopSynthetic(){
 }
 function stopAudio(){
   audioGeneration++;
-  ['airSound','droneSound','allClearSound','ruAirSound','ruDroneSound','ruMissileSound','ruChemicalSound','ruNuclearSound'].forEach(id=>{
-    const a=document.getElementById(id);
-    if(a){a.onerror=null;a.pause();try{a.currentTime=0}catch(e){}}
-  });
-  const recorded=document.getElementById('uploadedThreatSound');
-  if(recorded){recorded.onerror=null;recorded.pause();try{recorded.currentTime=0}catch(e){}}
+  const player=document.getElementById('uploadedThreatSound');
+  if(player){player.onerror=null;player.pause();try{player.currentTime=0}catch(e){}}
   stopSynthetic();
-  // Prevent text-to-speech from continuing over a new signal or an all-clear.
   if('speechSynthesis' in window){try{window.speechSynthesis.cancel()}catch(e){}}
 }
+
 // Original short sound effects. Keep just a few notes playing in sequence even when 51
 // different simulated scenarios are displayed at once, to avoid overlapping sirens.
 function playSyntheticSet(kinds){
   const C=window.AudioContext||window.webkitAudioContext;
-  if(!C){const fallback=document.getElementById('ruAirSound');if(fallback){fallback.volume=volume();fallback.play().catch(()=>{})}return}
+  if(!C)return
   try{
     if(!syntheticContext)syntheticContext=new C();
     if(syntheticContext.state==='suspended')syntheticContext.resume().catch(()=>{});
@@ -100,7 +99,11 @@ function playSyntheticSet(kinds){
       radio:[[790,0.08],[940,0.08],[670,0.1],[1020,0.14]],
       ufo:[[310,0.22],[520,0.22],[790,0.25]],
       boing:[[680,0.09],[280,0.26],[190,0.21]],
-      goose:[[450,0.13],[590,0.11],[450,0.17]],
+      goose:[[430,0.18],[590,0.11],[440,0.2]],
+      cat:[[670,0.2],[530,0.23],[380,0.26]],
+      dog:[[210,0.13],[150,0.12],[210,0.16]],
+      duck:[[390,0.12],[310,0.12],[390,0.14]],
+      pigeon:[[370,0.23],[310,0.22],[330,0.2]],
       buzz:[[930,0.08],[1030,0.07],[880,0.1],[980,0.12]],
       magic:[[430,0.13],[540,0.14],[670,0.16],[860,0.18]],
       march:[[360,0.13],[360,0.11],[510,0.19]],
@@ -109,6 +112,7 @@ function playSyntheticSet(kinds){
       bell:[[900,0.13],[740,0.3]],
       tune:[[523,0.13],[659,0.13],[784,0.2]],
       air:[[520,0.25],[710,0.25]],
+      drone:[[710,0.09],[980,0.09],[760,0.12],[1100,0.1]],
       missile:[[800,0.12],[480,0.19],[280,0.2]],
       strike:[[580,0.16],[580,0.16],[420,0.21]],
       artillery:[[310,0.2],[340,0.2],[310,0.2]],
@@ -118,14 +122,15 @@ function playSyntheticSet(kinds){
     };
     let t=syntheticContext.currentTime+.035;
     for(const k of kinds.slice(0,5)){
-      const type=ruById[k]?.sound||k;
+      const overrides={ru_cats:'cat',ru_patron:'dog',ru_ducks:'duck',ru_pigeons:'pigeon'};
+      const type=overrides[k]||ruById[k]?.sound||k;
       const sequence=patterns[type]||patterns.tune;
       for(const [frequency,duration] of sequence){
         const osc=syntheticContext.createOscillator();
         const gain=syntheticContext.createGain();
-        osc.type=(type==='ghost'||type==='ufo')?'sine':(type==='buzz'?'sawtooth':'triangle');
+        osc.type=(type==='ghost'||type==='ufo')?'sine':(['buzz','cat','dog','duck'].includes(type)?'sawtooth':'triangle');
         osc.frequency.setValueAtTime(frequency,t);
-        if(type==='ufo'||type==='boing'||type==='ghost')osc.frequency.exponentialRampToValueAtTime(Math.max(90,frequency*.72),t+duration);
+        if(['ufo','boing','ghost','cat','dog','duck','pigeon'].includes(type))osc.frequency.exponentialRampToValueAtTime(Math.max(90,frequency*.72),t+duration);
         gain.gain.setValueAtTime(.0001,t);
         gain.gain.exponentialRampToValueAtTime(Math.max(.0001,Math.min(.09,volume()*.09)),t+.02);
         gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
@@ -153,7 +158,7 @@ function primeAlarmAudio(){
 // with a gentle master level and fade-out to avoid startling volume spikes.
 function playDreadAlarm(){
   const C=window.AudioContext||window.webkitAudioContext;
-  if(!C){const fallback=document.getElementById('ruAirSound');if(fallback){fallback.volume=volume();fallback.play().catch(()=>{})}return}
+  if(!C)return
   try{
     primeAlarmAudio();
     if(!syntheticContext)return;
@@ -307,7 +312,15 @@ function playDistinctSignal(kind){
     }
   }catch(e){/* The controls remain usable when audio is blocked. */}
 }
-function soundTypeFor(k){return k==='ru_rad'?'radiation':(ruById[k]?.sound||k)}
+const recordedRussianTypes={
+  ru_rad:'radiation',
+  ru_chem:'chemical',
+  ru_street:'street1',
+  ru_air:'air',
+  ru_artillery:'artillery'
+};
+function soundTypeFor(k){return recordedRussianTypes[k]||k}
+function isMemeScenario(k){return Boolean(ruById[k])&&!Object.hasOwn(recordedRussianTypes,k)}
 // Load the chosen clip as soon as a type is selected, reducing mobile start delay.
 function preloadSelectedThreatSound(){
   const k=document.getElementById('threatSelect').value;
@@ -329,7 +342,7 @@ function playMediaWithFallback(a,k){
     if(token!==audioGeneration||usedFallback||error?.name==='AbortError')return;
     usedFallback=true;
     a.pause();
-    playSyntheticSet([k]);
+    if(k==='allclear')playDistinctSignal('allclear');else playSyntheticSet([k]);
   };
   a.onerror=()=>fallback();
   try{
@@ -339,33 +352,44 @@ function playMediaWithFallback(a,k){
 }
 function playThreat(k){
   stopAudio();
-  const requestedType=soundTypeFor(k);
-  if(['artillery','strike','divine'].includes(requestedType)){
-    playDistinctSignal(requestedType);
+  if(isMemeScenario(k)){
+    playSyntheticSet([k]); // Animals and memes are cartoon sounds, not warning recordings.
     return;
   }
-  const recording=recordedThreatAudio[requestedType];
+  const type=soundTypeFor(k);
+  const recording=recordedThreatAudio[type];
   if(recording){
     const a=document.getElementById('uploadedThreatSound');
-    if(a&&a.getAttribute('src')!==recording)a.setAttribute('src',recording);
-    playMediaWithFallback(a,k);
+    if(a){
+      if(a.getAttribute('src')!==recording){a.setAttribute('src',recording);a.load();}
+      try{a.currentTime=0}catch(e){}
+    }
+    playMediaWithFallback(a,type);
     return;
   }
-  const ruSounds={air:'ruAirSound',drone:'ruDroneSound',missile:'ruMissileSound',strike:'ruMissileSound',chemical:'ruChemicalSound',nuclear:'ruNuclearSound'};
-  const scenario=ruById[k];
-  if(scenario && !ruSounds[scenario.sound]){playSyntheticSet([k]);return}
-  const type=scenario?.sound||k;
-  const id=currentCountry==='ru'?(ruSounds[type]||'ruAirSound'):(ruSounds[type]||'airSound');
-  playMediaWithFallback(document.getElementById(id),k);
+  // No matching recording in the supplied video: use a different, locally created cue.
+  if(type==='strike'||type==='divine')playDistinctSignal(type);
+  else playSyntheticSet([type]);
 }
 function playThreatSet(kinds){
   if(!kinds?.length)return;
-  // Only one signal at a time even if several scenarios are selected.
-  if(currentCountry==='ru'&&kinds.length>=7){stopAudio();playDreadAlarm();return}
+  if(currentCountry==='ru'&&kinds.length>1){
+    const memes=kinds.filter(isMemeScenario);
+    if(memes.length){
+      const animals=memes.filter(k=>/ru_(geese|cats|ducks|pigeons|mosquito|patron)/.test(k));
+      stopAudio();playSyntheticSet((animals.length?animals:memes).slice(0,5));
+      return;
+    }
+  }
   playThreat(kinds[0]);
 }
-// The all-clear deliberately does not repeat the air-raid siren.
-function playClear(){stopAudio();playDistinctSignal('allclear')}
+function playClear(){
+  stopAudio();
+  const a=document.getElementById('uploadedThreatSound');
+  const src=recordedThreatAudio.allclear;
+  if(a){if(a.getAttribute('src')!==src){a.setAttribute('src',src);a.load();}try{a.currentTime=0}catch(e){}}
+  playMediaWithFallback(a,'allclear');
+}
 document.getElementById('volumeRange').oninput=e=>document.getElementById('volumeValue').textContent=e.target.value+'%';
 
 

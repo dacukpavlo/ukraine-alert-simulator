@@ -158,10 +158,13 @@
         <option value="drone">Загроза БпЛА / Shahed</option>
         <option value="missile">Ракетна загроза</option>
         <option value="strike">Загроза ракетного удару</option>
-        <option value="artillery">Артилерійський обстріл (демо)</option>
-        <option value="chemical">Хімічна небезпека</option>
+        <option value="artillery">Артилерійський обстріл</option>
+        <option value="street1">Вуличні бої — тип 1</option>
+        <option value="street2">Вуличні бої — тип 2</option>
+        <option value="chemical">Хімічна загроза</option>
         <option value="radiation">Радіаційна небезпека</option>
         <option value="nuclear">Ядерна небезпека</option>
+        <option value="high">Високий рівень небезпеки</option>
       </select>
 
       <label>Масштаб</label>
@@ -299,18 +302,10 @@
   </main>
 </div>
 
-<audio id="airSound" src="audio/air_alert.mp3" preload="auto"></audio>
-<audio id="droneSound" src="audio/drone_alert.mp3" preload="auto"></audio>
-<audio id="allClearSound" src="audio/all_clear.mp3" preload="auto"></audio>
-<audio id="ruAirSound" src="audio/ru-air.ogg" preload="none"></audio>
-<audio id="ruDroneSound" src="audio/ru-drone.ogg" preload="none"></audio>
-<audio id="ruMissileSound" src="audio/ru-missile.ogg" preload="none"></audio>
-<audio id="ruChemicalSound" src="audio/ru-chemical.ogg" preload="none"></audio>
-<audio id="ruNuclearSound" src="audio/ru-nuclear.ogg" preload="none"></audio>
-<audio id="uploadedThreatSound" preload="none" playsinline></audio>
+<audio id="uploadedThreatSound" src="audio/ua-air.mp3" preload="auto" playsinline></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261108-audiofix2"></script>
+<script src="script.js?v=20261110-verified-audio1"></script>
 <script src="flight-demo.js?v=20261110-game3"></script>
 </body>
 </html>
