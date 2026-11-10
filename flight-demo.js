@@ -131,6 +131,17 @@ function queueWave(auto=false){
   if(!auto)chirp();
   reflect();
 }
+function speakGameMeme(){
+  if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return;
+  const labels={mix:'мемные персонажи',goose:'боевые гуси',ufo:'НЛО',ghost:'привидения',plane:'бумажные самолётики',watermelon:'арбузы',dumpling:'вареники',broom:'летающие мётлы'};
+  const kind=labels[$('demoObject').value]||labels.mix;
+  try{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance('Внимание! В игровой карте появляются '+kind+'!');
+    u.lang='ru-RU';u.rate=.98;u.volume=.75;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
 function begin(){
   reset(false);
   $('demoLog').replaceChildren();
@@ -140,7 +151,7 @@ function begin(){
   status('ПІДГОТОВКА ХВИЛЬ');
   log('Старт гри: '+state.goal+' поступових хвиль.');
   drawerOpen(false);
-  chirp();
+  speakGameMeme();
   state.raf=requestAnimationFrame(tick);
   reflect();
 }
@@ -236,7 +247,7 @@ function leaveDemo(mode){
   const russian=mode==='ru';
   (russian?ru:ua).classList.add('active');
   (russian?ua:ru).classList.remove('active');
-  $('countryChip').textContent=russian?'Росія · меми':'Україна';
+  $('countryChip').textContent=russian?'Повітряні тривоги Росія':'Україна';
   $('countryNotice').textContent=russian
     ?'Увімкни тривогу для міста, області або всієї Росії. Це мемний ручний режим.'
     :'В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.';

@@ -125,3 +125,6 @@ body.demo-mode{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
  .wave-ticker{bottom:117px}
 }
 @media(prefers-reduced-motion:reduce){.wave-glimmer{animation-duration:.1s}}
+
+/* New country label must fit on phones. */
+.country-switch .country-button:nth-child(2){font-size:11px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}

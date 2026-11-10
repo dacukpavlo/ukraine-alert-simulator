@@ -12,10 +12,10 @@ let activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
 
-function kindLabel(k){return ruById[k]?.label||{air:'Повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару',artillery:'Артилерійський обстріл (демо)',chemical:'Хімічна небезпека',radiation:'Радіаційна небезпека',nuclear:'Ядерна небезпека'}[k]||k}
+function kindLabel(k){return ruById[k]?.label||{air:'Повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару',artillery:'Артилерійський обстріл',street1:'Вуличні бої — тип 1',street2:'Вуличні бої — тип 2',high:'Високий рівень небезпеки',chemical:'Хімічна небезпека',radiation:'Радіаційна небезпека',nuclear:'Ядерна небезпека'}[k]||k}
 function colorFor(k){const type=ruById[k]?.sound||k;return type==='drone'?'#ffd21f':type==='chemical'?'#a78bfa':type==='radiation'?'#fbbf24':type==='nuclear'?'#fb923c':'#ef3340'}
 
-const ruScenarios=[["rad","☢️ Радиационная опасность","⚠️ Загрози","nuclear","Радіаційна перевірка з мемним звуком."],["chem","☣️ Химическая угроза","⚠️ Загрози","chemical","Підозрілий запах пропаганди."],["street","⚔️ Уличные бои","⚠️ Загрози","missile","Тільки умовний тренувальний сценарій."],["air","🚨 Воздушная тревога","⚠️ Загрози","air","Тренувальний сигнал повітряної тривоги."],["artillery","💥 Артиллерийский обстрел","⚠️ Загрози","artillery","Умовний звук, не повідомлення про обстріл."],["nuclear","☢️ Ядерная угроза","⚠️ Загрози","nuclear","Фантастичний сценарій — не реальна загроза."],["oreshnik","🚀 Угроза ракеты «Орешник»","⚠️ Загрози","missile","Горішки для білочки закінчилися 🌰"],["wakeup_intro","👻 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Бандера проснулся и вышел на прогулку!"],["wakeup","💀 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Мемне пробудження легенди."],["kremlin","👻 Призрак Бандеры замечен в Кремле!","👻 Бандера й меми","ghost","Привид питає, де тут вихід."],["district","🚨 Внимание! Бандера в вашем районе!","👻 Бандера й меми","alarm","Місцевий мемний патруль на зв'язку."],["apocalypse","☠️ Бандеровский апокалипсис!","👻 Бандера й меми","alarm","Кінець спокою для пельменів."],["banderization","🇺🇦 Массовая бандеризация России!","👻 Бандера й меми","tune","Усе раптом заговорило українською."],["tridents","🔱 Нашествие украинских тризубов!","👻 Бандера й меми","tune","Тризуби на мемному радарі."],["resurrection","🧟 Восстание бандеровцев!","👻 Бандера й меми","ghost","Зомбі принесли паляницю."],["nightmare","👹 Ночной кошмар Бандеры!","👻 Бандера й меми","ghost","Будильник не допомагає."],["wifi","📡 Бандера взломал российский Wi-Fi!","👻 Бандера й меми","radio","Пароль Wi-Fi: паляниця."],["ufo","🛸 Бандеровские НЛО над Москвой!","👻 Бандера й меми","ufo","НЛО просять борщ."],["fridge","🥟 Бандера захватил холодильник!","👻 Бандера й меми","boing","Пельмені в паніці."],["tv","📺 Бандера появился во всех телевизорах!","👻 Бандера й меми","radio","Телевізор змінив канал на український."],["sleepless","👻 Призрак Бандеры не спит!","👻 Бандера й меми","ghost","Привид на нічній зміні."],["door","🔔 Бандера звонит в дверь!","👻 Бандера й меми","bell","Дзвінок: відчиніть для мемів."],["pelmeni","💀 Бандера объявил охоту на пельмени!","👻 Бандера й меми","boing","Пельмені пішли в укриття."],["geese","🪿 Вторжение украинских боевых гусей!","🪿 Українські меми","goose","Га-га-га, повітряний патруль."],["mosquito","🦟 Атака украинских боевых комаров!","🪿 Українські меми","buzz","Мемні комарі в ефірі."],["witch","🧙‍♀️ Конотопская ведьма приближается!","🪿 Українські меми","magic","Мітла заряджена борщем."],["pickles","🥒 Атака летающих банок с огурцами!","🪿 Українські меми","boing","Огірки взяли курс на холодильник."],["tractor","🚜 Вторжение украинских тракторных войск!","🪿 Українські меми","march","Трактор шукає наступний мем."],["patron","🐕 Пёс Патрон объявил проверку!","🪿 Українські меми","bell","Патрон перевіряє запаси смаколиків."],["cotton","🌸 Бавовняная тревога!","🪿 Українські меми","pop","Бавовна у мемному прогнозі."],["palianytsia","🍞 Паляниця-апокалипсис!","🪿 Українські меми","boing","Складно вимовити — легко запам'ятати."],["moskva_ship","🛳️ Крейсер «Москва» снова пропал!","🪿 Українські меми","pop","Крейсер пішов шукати Wi-Fi."],["chornobaivka","🔁 Чернобаевская аномалия!","🪿 Українські меми","tune","Це вже було, знову повторимо?"],["cats","🐈 Вторжение бандеровских котов!","🪿 Українські меми","goose","Мяу-патруль на службі."],["watermelons","🍉 Нашествие херсонских арбузов!","🪿 Українські меми","boing","Кавуни зайняли всі кошики."],["borsch_apocalypse","🥣 Борщевой апокалипсис!","🪿 Українські меми","boing","Борщ переміг кетчуп."],["ducks","🦆 Секретные украинские боевые утки!","🪿 Українські меми","goose","Кря-кря, секретна місія."],["pigeons","🐦 Украинские голуби захватили небо!","🪿 Українські меми","chirp","Голуби вийшли на зв'язок."],["run","🚨 Мамулечка, надо сваливать!","🥟 Побутові жарти","alarm","Мемний будильник працює."],["varenyky","🥟 Украинские вареники захватывают Россию!","🥟 Побутові жарти","boing","Вареники оголосили день сметани."],["onion","🧅 Луковая атака! Все плачут!","🥟 Побутові жарти","pop","Цибуля зробила свою справу."],["borsch_pelmeni","🍲 Борщ уничтожил все пельмени!","🥟 Побутові жарти","boing","Кулінарний фінал."],["ukr_tv","📺 Телевизор внезапно заговорил по-украински!","🥟 Побутові жарти","radio","Канал обрав українську мову."],["red_square","🪿 Гуси захватили Красную площадь!","🥟 Побутові жарти","goose","Гуси попросили послухати ґелґотання."],["sunflowers","🌻 Украинские подсолнухи наступают!","🥟 Побутові жарти","magic","Соняшники розквітають у мемі."],["radio_hymn","🎶 Все радиоприёмники включили украинский гимн!","🥟 Побутові жарти","tune","Мемний сигнал: без відтворення реального гімну."],["potato","🥔 Картофельная катастрофа!","🥟 Побутові жарти","boing","Картопля втекла з борщу."],["salo","🐷 Свинячья паника! Сало объявило мобилизацию!","🥟 Побутові жарти","march","Сало збирає команду бутербродів."],["aliens","👽 Инопланетяне требуют украинский борщ!","🥟 Побутові жарти","ufo","Прибульці замовили подвійну порцію."],["matryoshka","🎭 Российские матрёшки превратились в вышиванки!","🥟 Побутові жарти","magic","Матрьошки оновили гардероб."],["broom","🧹 Конотопские ведьмы устроили парад мётел!","🥟 Побутові жарти","magic","Відкрито сезон мітлиних перегонів."],["god","😇 Приход Бога — небесная тревога!","🎭 Мемні події","divine","Урочистий мемний сигнал із дзвонами."]].map(([id,label,group,sound,caption])=>({id:'ru_'+id,label,group,sound,caption}));
+const ruScenarios=[["rad","☢️ Радиационная опасность","⚠️ Загрози","radiation","Радіаційна перевірка з мемним звуком."],["chem","☣️ Химическая угроза","⚠️ Загрози","chemical","Підозрілий запах пропаганди."],["street","⚔️ Уличные бои — тип 1","⚠️ Загрози","street1","Відповідний звук із відео."],["street2","⚔️ Уличные бои — тип 2","⚠️ Загрози","street2","Другий варіант звуку із відео."],["air","🚨 Воздушная тревога","⚠️ Загрози","air","Тренувальний сигнал повітряної тривоги."],["artillery","💥 Артиллерийский обстрел","⚠️ Загрози","artillery","Оригінальний запис із відео."],["high","🚨 Высокий уровень опасности","⚠️ Загрози","high","Оригінальний запис із відео."],["nuclear","☢️ Ядерная угроза","⚠️ Загрози","nuclear","Фантастичний сценарій — не реальна загроза."],["oreshnik","🚀 Угроза ракеты «Орешник»","⚠️ Загрози","missile","Горішки для білочки закінчилися 🌰"],["wakeup_intro","👻 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Бандера проснулся и вышел на прогулку!"],["wakeup","💀 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Мемне пробудження легенди."],["kremlin","👻 Призрак Бандеры замечен в Кремле!","👻 Бандера й меми","ghost","Привид питає, де тут вихід."],["district","🚨 Внимание! Бандера в вашем районе!","👻 Бандера й меми","alarm","Місцевий мемний патруль на зв'язку."],["apocalypse","☠️ Бандеровский апокалипсис!","👻 Бандера й меми","alarm","Кінець спокою для пельменів."],["banderization","🇺🇦 Массовая бандеризация России!","👻 Бандера й меми","tune","Усе раптом заговорило українською."],["tridents","🔱 Нашествие украинских тризубов!","👻 Бандера й меми","tune","Тризуби на мемному радарі."],["resurrection","🧟 Восстание бандеровцев!","👻 Бандера й меми","ghost","Зомбі принесли паляницю."],["nightmare","👹 Ночной кошмар Бандеры!","👻 Бандера й меми","ghost","Будильник не допомагає."],["wifi","📡 Бандера взломал российский Wi-Fi!","👻 Бандера й меми","radio","Пароль Wi-Fi: паляниця."],["ufo","🛸 Бандеровские НЛО над Москвой!","👻 Бандера й меми","ufo","НЛО просять борщ."],["fridge","🥟 Бандера захватил холодильник!","👻 Бандера й меми","boing","Пельмені в паніці."],["tv","📺 Бандера появился во всех телевизорах!","👻 Бандера й меми","radio","Телевізор змінив канал на український."],["sleepless","👻 Призрак Бандеры не спит!","👻 Бандера й меми","ghost","Привид на нічній зміні."],["door","🔔 Бандера звонит в дверь!","👻 Бандера й меми","bell","Дзвінок: відчиніть для мемів."],["pelmeni","💀 Бандера объявил охоту на пельмени!","👻 Бандера й меми","boing","Пельмені пішли в укриття."],["geese","🪿 Вторжение украинских боевых гусей!","🪿 Українські меми","goose","Га-га-га, повітряний патруль."],["mosquito","🦟 Атака украинских боевых комаров!","🪿 Українські меми","buzz","Мемні комарі в ефірі."],["witch","🧙‍♀️ Конотопская ведьма приближается!","🪿 Українські меми","magic","Мітла заряджена борщем."],["pickles","🥒 Атака летающих банок с огурцами!","🪿 Українські меми","boing","Огірки взяли курс на холодильник."],["tractor","🚜 Вторжение украинских тракторных войск!","🪿 Українські меми","march","Трактор шукає наступний мем."],["patron","🐕 Пёс Патрон объявил проверку!","🪿 Українські меми","bell","Патрон перевіряє запаси смаколиків."],["cotton","🌸 Бавовняная тревога!","🪿 Українські меми","pop","Бавовна у мемному прогнозі."],["palianytsia","🍞 Паляниця-апокалипсис!","🪿 Українські меми","boing","Складно вимовити — легко запам'ятати."],["moskva_ship","🛳️ Крейсер «Москва» снова пропал!","🪿 Українські меми","pop","Крейсер пішов шукати Wi-Fi."],["chornobaivka","🔁 Чернобаевская аномалия!","🪿 Українські меми","tune","Це вже було, знову повторимо?"],["cats","🐈 Вторжение бандеровских котов!","🪿 Українські меми","goose","Мяу-патруль на службі."],["watermelons","🍉 Нашествие херсонских арбузов!","🪿 Українські меми","boing","Кавуни зайняли всі кошики."],["borsch_apocalypse","🥣 Борщевой апокалипсис!","🪿 Українські меми","boing","Борщ переміг кетчуп."],["ducks","🦆 Секретные украинские боевые утки!","🪿 Українські меми","goose","Кря-кря, секретна місія."],["pigeons","🐦 Украинские голуби захватили небо!","🪿 Українські меми","chirp","Голуби вийшли на зв'язок."],["run","🚨 Мамулечка, надо сваливать!","🥟 Побутові жарти","alarm","Мемний будильник працює."],["varenyky","🥟 Украинские вареники захватывают Россию!","🥟 Побутові жарти","boing","Вареники оголосили день сметани."],["onion","🧅 Луковая атака! Все плачут!","🥟 Побутові жарти","pop","Цибуля зробила свою справу."],["borsch_pelmeni","🍲 Борщ уничтожил все пельмени!","🥟 Побутові жарти","boing","Кулінарний фінал."],["ukr_tv","📺 Телевизор внезапно заговорил по-украински!","🥟 Побутові жарти","radio","Канал обрав українську мову."],["red_square","🪿 Гуси захватили Красную площадь!","🥟 Побутові жарти","goose","Гуси попросили послухати ґелґотання."],["sunflowers","🌻 Украинские подсолнухи наступают!","🥟 Побутові жарти","magic","Соняшники розквітають у мемі."],["radio_hymn","🎶 Все радиоприёмники включили украинский гимн!","🥟 Побутові жарти","tune","Мемний сигнал: без відтворення реального гімну."],["potato","🥔 Картофельная катастрофа!","🥟 Побутові жарти","boing","Картопля втекла з борщу."],["salo","🐷 Свинячья паника! Сало объявило мобилизацию!","🥟 Побутові жарти","march","Сало збирає команду бутербродів."],["aliens","👽 Инопланетяне требуют украинский борщ!","🥟 Побутові жарти","ufo","Прибульці замовили подвійну порцію."],["matryoshka","🎭 Российские матрёшки превратились в вышиванки!","🥟 Побутові жарти","magic","Матрьошки оновили гардероб."],["broom","🧹 Конотопские ведьмы устроили парад мётел!","🥟 Побутові жарти","magic","Відкрито сезон мітлиних перегонів."],["god","😇 Приход Бога — небесная тревога!","🎭 Мемні події","divine","Урочистий мемний сигнал із дзвонами."]].map(([id,label,group,sound,caption])=>({id:'ru_'+id,label,group,sound,caption}));
 const ruById=Object.fromEntries(ruScenarios.map(s=>[s.id,s]));
 const ruCountryPlace={name:'Росія',display:'Вся Росія',lat:61,lng:90,osm_type:'country_sim',osm_id:60189};
 const memeCaptions={
@@ -56,17 +56,16 @@ document.getElementById('searchBtn').onclick=runSearch;
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();runSearch()}});
 
 function volume(){return +document.getElementById('volumeRange').value/100}
-// Attached clips now belong to threat types in the existing dropdown.
-// The first three were unnamed in their videos, so their mapping can be refined later.
+// Eight labeled clips were extracted from the user's supplied video. Each choice plays only its matching original clip.
 const recordedThreatAudio={
-  air:'audio/ua-air.mp3',
-  artillery:'audio/ua-artillery.mp3',
-  street1:'audio/ua-street1.ogg',
-  street2:'audio/ua-street2.ogg',
-  chemical:'audio/ua-chemical.mp3',
-  radiation:'audio/ua-radiation.mp3',
-  high:'audio/ua-high.ogg',
-  allclear:'audio/ua-allclear.ogg'
+  air:'audio/video-20261110-air.ogg',
+  artillery:'audio/video-20261110-artillery.ogg',
+  street1:'audio/video-20261110-street1.ogg',
+  street2:'audio/video-20261110-street2.ogg',
+  chemical:'audio/video-20261110-chemical.ogg',
+  radiation:'audio/video-20261110-radiation.ogg',
+  high:'audio/video-20261110-high.ogg',
+  allclear:'audio/video-20261110-allclear.ogg'
 };
 let syntheticContext=null;
 let syntheticOscillators=[];
@@ -312,15 +311,11 @@ function playDistinctSignal(kind){
     }
   }catch(e){/* The controls remain usable when audio is blocked. */}
 }
-const recordedRussianTypes={
-  ru_rad:'radiation',
-  ru_chem:'chemical',
-  ru_street:'street1',
-  ru_air:'air',
-  ru_artillery:'artillery'
-};
-function soundTypeFor(k){return recordedRussianTypes[k]||k}
-function isMemeScenario(k){return Boolean(ruById[k])&&!Object.hasOwn(recordedRussianTypes,k)}
+function soundTypeFor(k){return ruById[k]?.sound||k}
+function isMemeScenario(k){
+  const item=ruById[k];
+  return Boolean(item&&item.group!=='⚠️ Загрози');
+}
 // Load the chosen clip as soon as a type is selected, reducing mobile start delay.
 function preloadSelectedThreatSound(){
   const k=document.getElementById('threatSelect').value;
@@ -333,62 +328,80 @@ function preloadSelectedThreatSound(){
 }
 document.getElementById('threatSelect').addEventListener('change',preloadSelectedThreatSound);
 
-function playMediaWithFallback(a,k){
-  if(!a){playSyntheticSet([k]);return}
-  a.volume=volume();
-  const token=audioGeneration;
-  let usedFallback=false;
-  const fallback=(error)=>{
-    if(token!==audioGeneration||usedFallback||error?.name==='AbortError')return;
-    usedFallback=true;
-    a.pause();
-    if(k==='allclear')playDistinctSignal('allclear');else playSyntheticSet([k]);
-  };
-  a.onerror=()=>fallback();
+// Speech is reserved for fantasy/meme scenarios; warning recordings never speak.
+function speakMemeScenarios(kinds){
+  const memes=kinds.filter(isMemeScenario);
+  if(!memes.length||!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return;
+  const titles=memes.slice(0,3).map(k=>
+    ruById[k].label.replace(/^[^А-Яа-яЁёЇїЄєІіҐґA-Za-z0-9]+/,'').replace(/[!?]+$/,'').trim()
+  );
+  const phrase=memes.length===1
+    ?'Внимание! '+titles[0]+'!'
+    :'Внимание! Мемные сообщения: '+titles.join('. ')+(memes.length>3?'. И другие мемы.':'.');
   try{
-    const result=a.play();
-    if(result&&typeof result.catch==='function')result.catch(fallback);
-  }catch(error){fallback(error)}
+    const u=new SpeechSynthesisUtterance(phrase);
+    u.lang='ru-RU';u.rate=.94;u.pitch=1;u.volume=volume();
+    const voice=window.speechSynthesis.getVoices().find(v=>/^ru[-_]/i.test(v.lang));
+    if(voice)u.voice=voice;
+    window.speechSynthesis.speak(u);
+  }catch(e){console.warn('Unable to speak meme alert:',e)}
+}
+// The original audio must not be replaced with a different synthetic beep.
+function playMediaWithFallback(audio,key){
+  if(!audio){console.warn('Sound player unavailable:',key);return}
+  // Reserve headroom for source clips that reach 0 dBFS to avoid clipping on phones.
+  audio.volume=Math.min(1,volume()*.75);
+  const token=audioGeneration;
+  audio.onerror=()=>{if(token===audioGeneration)console.warn('Recorded sound not found:',key,audio.src)};
+  try{
+    const result=audio.play();
+    if(result&&typeof result.catch==='function')result.catch(e=>{
+      if(token===audioGeneration&&e?.name!=='AbortError')console.warn('Cannot play recorded sound:',key,e)
+    });
+  }catch(e){console.warn('Cannot start recorded sound:',key,e)}
+}
+function playRecordedAudio(kind){
+  const src=recordedThreatAudio[kind];
+  const audio=document.getElementById('uploadedThreatSound');
+  if(!src||!audio)return false;
+  if(audio.getAttribute('src')!==src){audio.setAttribute('src',src);audio.load();}
+  try{audio.currentTime=0}catch(e){}
+  playMediaWithFallback(audio,kind);
+  return true;
 }
 function playThreat(k){
   stopAudio();
   if(isMemeScenario(k)){
-    playSyntheticSet([k]); // Animals and memes are cartoon sounds, not warning recordings.
+    speakMemeScenarios([k]);
     return;
   }
   const type=soundTypeFor(k);
-  const recording=recordedThreatAudio[type];
-  if(recording){
-    const a=document.getElementById('uploadedThreatSound');
-    if(a){
-      if(a.getAttribute('src')!==recording){a.setAttribute('src',recording);a.load();}
-      try{a.currentTime=0}catch(e){}
-    }
-    playMediaWithFallback(a,type);
-    return;
-  }
-  // No matching recording in the supplied video: use a different, locally created cue.
-  if(type==='strike'||type==='divine')playDistinctSignal(type);
+  if(playRecordedAudio(type))return;
+  // Categories absent from the submitted video retain a separate nonverbal cue.
+  if(type==='strike')playDistinctSignal(type);
   else playSyntheticSet([type]);
 }
 function playThreatSet(kinds){
-  if(!kinds?.length)return;
-  if(currentCountry==='ru'&&kinds.length>1){
-    const memes=kinds.filter(isMemeScenario);
-    if(memes.length){
-      const animals=memes.filter(k=>/ru_(geese|cats|ducks|pigeons|mosquito|patron)/.test(k));
-      stopAudio();playSyntheticSet((animals.length?animals:memes).slice(0,5));
-      return;
-    }
+  if(!Array.isArray(kinds)||!kinds.length)return;
+  const normal=kinds.find(k=>!isMemeScenario(k));
+  const memes=kinds.filter(isMemeScenario);
+  if(!normal){stopAudio();speakMemeScenarios(memes);return;}
+  playThreat(normal);
+  if(!memes.length)return;
+  // Speak meme titles only after a real sampled recording has finished.
+  const token=audioGeneration;
+  const audio=document.getElementById('uploadedThreatSound');
+  if(recordedThreatAudio[soundTypeFor(normal)]&&audio){
+    audio.addEventListener('ended',()=>{
+      if(token===audioGeneration)speakMemeScenarios(memes);
+    },{once:true});
+  }else{
+    setTimeout(()=>{if(token===audioGeneration)speakMemeScenarios(memes)},2200);
   }
-  playThreat(kinds[0]);
 }
 function playClear(){
   stopAudio();
-  const a=document.getElementById('uploadedThreatSound');
-  const src=recordedThreatAudio.allclear;
-  if(a){if(a.getAttribute('src')!==src){a.setAttribute('src',src);a.load();}try{a.currentTime=0}catch(e){}}
-  playMediaWithFallback(a,'allclear');
+  playRecordedAudio('allclear');
 }
 document.getElementById('volumeRange').oninput=e=>document.getElementById('volumeValue').textContent=e.target.value+'%';
 
@@ -699,12 +712,12 @@ const memeCountryFlightTargets=[
 ];
 let memeFlightTimers=[];
 let memeFlightCycle=0;
-function clearMemeFlights(){
+function clearMemeFlights(cancelSpeech=true){
   memeFlightCycle++;
   memeFlightTimers.forEach(clearTimeout);
   memeFlightTimers=[];
   memeFlightLayer.replaceChildren();
-  if('speechSynthesis' in window)try{window.speechSynthesis.cancel()}catch(e){}
+  if(cancelSpeech&&'speechSynthesis' in window)try{window.speechSynthesis.cancel()}catch(e){}
 }
 function memeFlightVisual(kind){
   const standard={
@@ -739,7 +752,7 @@ function sayMemeFlights(kinds,scope,place){
   card.append(heading,caveat);
   memeFlightLayer.append(card);
   memeFlightTimers.push(setTimeout(()=>card.remove(),9500));
-  // Intentionally no voice narration: the selected alarm sound plays alone.
+  // Meme names are narrated when launched; normal alarm recordings have no voice narration.
 
 }
 function animateMemeObject(kind,i,scope,place,cycle){
@@ -793,7 +806,7 @@ function animateMemeObject(kind,i,scope,place,cycle){
   },duration));
 }
 function launchMemeFlights(kinds,scope,place){
-  clearMemeFlights();
+  clearMemeFlights(false);
   if(currentCountry!=='ru'||!kinds?.length)return;
   const cycle=memeFlightCycle;
   sayMemeFlights(kinds,scope,place);
@@ -948,7 +961,7 @@ async function switchCountry(mode){
   document.getElementById('countryRussia').classList.toggle('active',mode==='ru');
   document.getElementById('countryUkraine').setAttribute('aria-pressed',String(mode==='ua'));
   document.getElementById('countryRussia').setAttribute('aria-pressed',String(mode==='ru'));
-  document.getElementById('countryChip').textContent=mode==='ru'?'Росія · меми':'Україна';
+  document.getElementById('countryChip').textContent=mode==='ru'?'Повітряні тривоги Росія':'Україна';
   document.getElementById('countryNotice').textContent=mode==='ru'?'Увімкни тривогу для міста, області або всієї Росії. Це мемний ручний режим, не реальні повідомлення.':'В Україні тривоги вмикаються вручну. Реальний стан — за кнопкою нижче.';
   document.getElementById('ukraineLiveCard').classList.toggle('hidden',mode==='ru');
   document.getElementById('russiaMemeInfo').classList.toggle('hidden',mode!=='ru');
