@@ -155,6 +155,7 @@
       <h2>Загроза</h2>
       <select id="threatSelect">
         <option value="air">Повітряна тривога</option>
+        <option value="yellow">Жовта повітряна тривога</option>
         <option value="drone">Загроза БпЛА / Shahed</option>
         <option value="missile">Ракетна загроза</option>
         <option value="strike">Загроза ракетного удару</option>
@@ -166,6 +167,7 @@
         <option value="nuclear">Ядерна небезпека</option>
         <option value="high">Високий рівень небезпеки</option>
       </select>
+      <p id="audioStatus" class="small" role="status" aria-live="polite"></p>
 
       <label>Масштаб</label>
       <select id="scopeSelect">
@@ -187,13 +189,13 @@
     <section class="card meme-info hidden" id="russiaMemeInfo">
       <h2>😂 Мемні повідомлення</h2>
       <p class="small">Російський режим — авторські жарти, а не реальні сповіщення чи факти запусків. Меми натхненні українською реакцією на новини.</p>
-      <p class="small">Доступні 52 сценарії: Бандера, українські гуси, борщ, бавовна, ракети та інші. Сирени й короткі оригінальні мемні звукові ефекти.</p>
+      <p class="small">Доступні 53 сценарії: Бандера, українські гуси, борщ, бавовна, ракети та інші. Сирени й короткі оригінальні мемні звукові ефекти.</p>
     </section>
 
     <section class="card ru-multi-card hidden" id="ruMultiCard">
       <h2>🎭 Одночасні тривоги Росії</h2>
-      <p class="small">Обери кілька сценаріїв: вони з'являться одночасно для вибраного міста, області або всієї Росії. Якщо вибрати 7 або більше сценаріїв, під час запуску прозвучить окрема моторошна сирена (близько 9 секунд). Для меншої кількості звучать короткі ефекти. Гучність регулюється нижче.</p>
-      <label for="ruScenarioSearch">Пошук серед 52 сценаріїв</label>
+      <p class="small">Обери кілька сценаріїв: вони з'являться одночасно для вибраного міста, області або всієї Росії. Для звичайних типів тривог відтворюється відповідний сигнал, для мемних — голосове оголошення. Кілька різних сирен не накладаються одна на одну. Гучність регулюється нижче.</p>
+      <label for="ruScenarioSearch">Пошук серед 53 сценаріїв</label>
       <input id="ruScenarioSearch" type="search" placeholder="Бандера, гуси, химическая…" autocomplete="off">
       <div class="ru-picker-toolbar">
         <button id="ruSelectAll" type="button">Вибрати всі</button>
@@ -302,7 +304,7 @@
   </main>
 </div>
 
-<audio id="uploadedThreatSound" src="audio/video-20261110-air.ogg" preload="auto" playsinline></audio>
+<audio id="uploadedThreatSound" src="audio/alert-20261125-air.mp3" preload="auto" playsinline></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="script.js?v=20261110-corrected-clips5"></script>
