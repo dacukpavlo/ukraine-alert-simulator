@@ -29,6 +29,11 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
+      # GitHub's artifact listing can lag behind a completed upload; avoid a
+      # deploy-pages lookup racing artifact-index propagation (especially on
+      # mobile-upload-heavy site updates).
+      - name: Allow Pages artifact indexing
+        run: sleep 15
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
