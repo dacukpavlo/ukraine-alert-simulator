@@ -8,7 +8,16 @@ if(localStorage.getItem('uaAlertBoundaryVersion')!==uaAlertBoundaryVersion){
 }
 let selected=null,searchResults=[],currentCountry='ua';
 const alertStorageKey=()=>currentCountry==='ru'?'ruMemeAlerts':'uaAlertSim';
-let activeAlerts=JSON.parse(localStorage.getItem('uaAlertSim')||'{}');
+function loadSavedAlerts(key){
+  try{
+    const val=JSON.parse(localStorage.getItem(key)||'{}');
+    return val && typeof val==='object' && !Array.isArray(val) ? val : {};
+  }catch(e){
+    console.warn('Saved alerts reset: unreadable data.',e);
+    return {};
+  }
+}
+let activeAlerts=loadSavedAlerts('uaAlertSim');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
 
@@ -57,20 +66,24 @@ searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault(
 
 function volume(){return +document.getElementById('volumeRange').value/100}
 // Eight labeled clips were extracted from the user's supplied video. Each choice plays only its matching original clip.
+// Recordings cut from the two user-provided videos (2026-11-25).
+// They are non-official sounds for a manually operated map demo.
+// street2 and high refer to earlier user clips; the latest videos did not label those separately.
 const recordedThreatAudio={
-  air:'audio/alert-20261125-air.mp3',
-  yellow:'audio/alert-20261125-yellow.mp3',
-  artillery:'audio/alert-20261125-artillery.mp3',
-  street1:'audio/alert-20261125-street1.mp3',
+  air:'audio/clip-20261125-v3-air.mp3',
+  yellow:'audio/clip-20261125-v3-yellow.mp3',
+  artillery:'audio/clip-20261125-v3-artillery.mp3',
+  street1:'audio/clip-20261125-v3-street1.mp3',
   street2:'audio/video-20261110-street2.ogg',
-  chemical:'audio/alert-20261125-chemical.mp3',
-  radiation:'audio/alert-20261125-radiation.mp3',
+  chemical:'audio/clip-20261125-v3-chemical.mp3',
+  radiation:'audio/clip-20261125-v3-radiation.mp3',
   high:'audio/video-20261110-high.ogg',
-  allclear:'audio/alert-20261125-allclear.mp3'
+  allclear:'audio/clip-20261125-v3-speaker.mp3'
 };
 let syntheticContext=null;
 let syntheticOscillators=[];
 let audioGeneration=0;
+let pendingMemeEndedHandler=null;
 // Cancels an unfinished boundary lookup when a newer action supersedes it.
 let pendingAlertLaunch=0;
 function stopSynthetic(){
@@ -80,7 +93,7 @@ function stopSynthetic(){
 function stopAudio(){
   audioGeneration++;
   const player=document.getElementById('uploadedThreatSound');
-  if(player){player.onerror=null;player.onended=null;player.pause();try{player.currentTime=0}catch(e){}}
+  if(player){if(pendingMemeEndedHandler){player.removeEventListener('ended',pendingMemeEndedHandler);pendingMemeEndedHandler=null;}player.onerror=null;player.onended=null;player.pause();try{player.currentTime=0}catch(e){}}
   const status=document.getElementById('audioStatus');if(status)status.textContent='';
   stopSynthetic();
   if('speechSynthesis' in window){try{window.speechSynthesis.cancel()}catch(e){}}
@@ -328,7 +341,7 @@ function preloadSelectedThreatSound(){
     a.load();
   }
 }
-document.getElementById('threatSelect').addEventListener('change',preloadSelectedThreatSound);
+document.getElementById('threatSelect').addEventListener('change',()=>{stopAudio();preloadSelectedThreatSound();});
 
 // Speech is reserved for fantasy/meme scenarios; warning recordings never speak.
 function speakMemeScenarios(kinds){
@@ -413,9 +426,11 @@ function playThreatSet(kinds){
   const token=audioGeneration;
   const audio=document.getElementById('uploadedThreatSound');
   if(recordedThreatAudio[soundTypeFor(normal)]&&audio){
-    audio.addEventListener('ended',()=>{
+    pendingMemeEndedHandler=()=>{
+      pendingMemeEndedHandler=null;
       if(token===audioGeneration)speakMemeScenarios(memes);
-    },{once:true});
+    };
+    audio.addEventListener('ended',pendingMemeEndedHandler,{once:true});
   }else{
     setTimeout(()=>{if(token===audioGeneration)speakMemeScenarios(memes)},2200);
   }
@@ -972,7 +987,7 @@ async function switchCountry(mode){
   for(const [k,z] of Object.entries(zones)){if(z&&map.hasLayer(z))map.removeLayer(z);delete zones[k]}
   for(const [k,m] of Object.entries(markers)){if(m&&map.hasLayer(m))map.removeLayer(m);delete markers[k]}
   currentCountry=mode;
-  activeAlerts=JSON.parse(localStorage.getItem(alertStorageKey())||'{}');
+  activeAlerts=loadSavedAlerts(alertStorageKey());
   selected=null;searchResults=[];searchInput.value='';
   document.getElementById('suggestions').classList.add('hidden');
   document.getElementById('selectedPlace').textContent='Місце ще не вибрано';
