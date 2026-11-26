@@ -1,0 +1,71 @@
+{
+  "version": "2026-11-26-v5",
+  "note": "Sound files for a manually operated simulator, not official alerts.",
+  "sources": [
+    "VID_20261125_083210_800.mp4",
+    "VID_20261125_083213_705.mp4"
+  ],
+  "clips": [
+    {
+      "id": "air",
+      "path": "audio/clip-20261126-v5-air.mp3",
+      "start_s": 0,
+      "end_s": 14.333,
+      "visual": "red aerial warning",
+      "source": 0
+    },
+    {
+      "id": "artillery",
+      "path": "audio/clip-20261126-v5-artillery.mp3",
+      "start_s": 14.333,
+      "end_s": 29.7,
+      "visual": "orange artillery",
+      "source": 0
+    },
+    {
+      "id": "street",
+      "path": "audio/clip-20261126-v5-street.mp3",
+      "start_s": 29.7,
+      "end_s": 44.4,
+      "visual": "green street-fighting",
+      "source": 0
+    },
+    {
+      "id": "chemical",
+      "path": "audio/clip-20261126-v5-chemical.mp3",
+      "start_s": 44.4,
+      "end_s": 58.967,
+      "visual": "purple gas mask",
+      "source": 0
+    },
+    {
+      "id": "radiation",
+      "path": "audio/clip-20261126-v5-radiation.mp3",
+      "start_s": 58.967,
+      "end_s": 73.533,
+      "visual": "yellow radiation icon",
+      "source": 0
+    },
+    {
+      "id": "speaker",
+      "path": "audio/clip-20261126-v5-speaker.mp3",
+      "start_s": 73.533,
+      "end_s": 83.613,
+      "visual": "yellow loudspeaker; not verified as all clear",
+      "source": 0
+    },
+    {
+      "id": "yellow",
+      "path": "audio/clip-20261126-v5-yellow.mp3",
+      "start_s": 0,
+      "end_s": 8.8,
+      "visual": "separate yellow alert video",
+      "source": 1
+    }
+  ],
+  "aliases": {
+    "drone": "yellow"
+  },
+  "separate_clear_signal": true,
+  "notes": "Segments trimmed at video frame changes. Beeps are kept. MP3s mastered for headroom. Spoken lines are only used for memes."
+}

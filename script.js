@@ -71,14 +71,14 @@ function volume(){return +document.getElementById('volumeRange').value/100}
 // intentionally a distinct synthesized confirmation, not the loudspeaker clip.
 // These are nonofficial sounds for a manually operated demo.
 const recordedThreatAudio={
-  air:'audio/clip-20261125-v4-air.mp3',
-  yellow:'audio/clip-20261125-v4-yellow.mp3',
-  drone:'audio/clip-20261125-v4-yellow.mp3',
-  artillery:'audio/clip-20261125-v4-artillery.mp3',
-  street1:'audio/clip-20261125-v4-street.mp3',
-  chemical:'audio/clip-20261125-v4-chemical.mp3',
-  radiation:'audio/clip-20261125-v4-radiation.mp3',
-  speaker:'audio/clip-20261125-v4-speaker.mp3'
+  air:'audio/clip-20261126-v5-air.mp3',
+  yellow:'audio/clip-20261126-v5-yellow.mp3',
+  drone:'audio/clip-20261126-v5-yellow.mp3',
+  artillery:'audio/clip-20261126-v5-artillery.mp3',
+  street1:'audio/clip-20261126-v5-street.mp3',
+  chemical:'audio/clip-20261126-v5-chemical.mp3',
+  radiation:'audio/clip-20261126-v5-radiation.mp3',
+  speaker:'audio/clip-20261126-v5-speaker.mp3'
 };
 let syntheticContext=null;
 let syntheticOscillators=[];
@@ -367,7 +367,7 @@ function speakMemeScenarios(kinds){
 function playMediaWithFallback(audio,key){
   if(!audio){console.warn('Sound player unavailable:',key);return}
   // Reserve headroom for source clips that reach 0 dBFS to avoid clipping on phones.
-  audio.volume=Math.min(1,volume()*.75);
+  audio.volume=Math.min(1,volume()*.95);
   audio.loop=false;
   audio.playbackRate=1;
   const token=audioGeneration;
@@ -444,7 +444,7 @@ function playClear(){
 document.getElementById('volumeRange').oninput=e=>{
   document.getElementById('volumeValue').textContent=e.target.value+'%';
   const player=document.getElementById('uploadedThreatSound');
-  if(player&&!player.paused)player.volume=Math.min(1,volume()*.75);
+  if(player&&!player.paused)player.volume=Math.min(1,volume()*.95);
 };
 
 
