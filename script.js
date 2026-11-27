@@ -74,21 +74,18 @@ const recordedThreatAudio={
   air:'audio/clip-20261126-v5-air.mp3',
   yellow:'audio/clip-20261126-v5-yellow.mp3',
   drone:'audio/clip-20261126-v5-yellow.mp3',
-  artillery:'audio/clip-20261126-v5-artillery.mp3',
+  artillery:'audio/artillery-warning-20261127.mp3',
   street1:'audio/clip-20261126-v5-street.mp3',
   chemical:'audio/clip-20261126-v5-chemical.mp3',
   radiation:'audio/clip-20261126-v5-radiation.mp3',
   speaker:'audio/clip-20261126-v5-speaker.mp3',
-  artillery_clear:'audio/clip-20261126-v5-artillery.mp3',
+  artillery_clear:'audio/artillery-all-clear-20261127.mp3',
   air_comedy:'audio/new-20261127-air-comedy.mp3',
   clear_calm:'audio/new-20261127-clear-calm.mp3',
   clear_music:'audio/new-20261127-clear-music.mp3'
 };
-const recordingSegments={
-  artillery:{start:0.39,end:7.87},
-  artillery_clear:{start:8.12,end:15.30}
-};
-const optionalRecordings=['air_comedy','clear_calm','clear_music'];
+// The artillery warning and artillery all-clear are physically separate MP3s.
+// They must not seek within one recording or accidentally play each other.
 function isClearNotice(k){return k==='artillery_clear'||k==='clear_calm'||k==='clear_music'}
 let syntheticContext=null;
 let syntheticOscillators=[];
@@ -382,20 +379,6 @@ function playMediaWithFallback(audio,key){
   audio.playbackRate=1;
   const token=audioGeneration;
   const status=document.getElementById('audioStatus');
-  const segment=recordingSegments[key];
-  audio.ontimeupdate=null;
-  audio.onloadedmetadata=null;
-  if(segment){
-    const seek=()=>{if(token===audioGeneration)try{audio.currentTime=segment.start}catch(e){}};
-    if(audio.readyState>=1)seek();else audio.onloadedmetadata=seek;
-    audio.ontimeupdate=()=>{
-      if(token!==audioGeneration)return;
-      if(audio.currentTime>=segment.end-0.04){
-        audio.ontimeupdate=null;audio.pause();
-        audio.dispatchEvent(new Event('ended'));
-      }
-    };
-  }
   audio.onerror=()=>{
     if(token!==audioGeneration)return;
     if(status)status.textContent='Не вдалося завантажити звук. Перевір інтернет та онови сторінку.';
@@ -469,24 +452,11 @@ function playClear(forType=''){
   const status=document.getElementById('audioStatus');
   if(status)status.textContent='✅ Відбій: окремий сигнал завершення.';
 }
-async function checkOptionalRecordings(){
-  // Keep new choices unavailable until their actual MP3 files are on GitHub Pages.
-  for(const key of optionalRecordings){
-    const option=document.querySelector('option[value="'+key+'"]');
-    if(!option)continue;
-    option.disabled=true;
-    try{
-      const result=await fetch(recordedThreatAudio[key],{method:'HEAD',cache:'no-store'});
-      option.disabled=!result.ok;
-    }catch(e){option.disabled=true;}
-  }
-  const hint=document.getElementById('newSoundHint');
-  if(hint){
-    const available=optionalRecordings.filter(k=>!document.querySelector('option[value="'+k+'"]')?.disabled).length;
-    hint.textContent=available===3?'✅ Додаткові записи доступні. Старі звуки збережені.':'Додаткові записи стануть доступними після завантаження MP3. Старі звуки працюють.';
-  }
-}
-checkOptionalRecordings();
+// The new MP3s are committed together with this script, so menu items can
+// stay enabled without a HEAD request that some mobile networks might block.
+const extraSoundHint=document.getElementById('newSoundHint');
+if(extraSoundHint)extraSoundHint.textContent='✅ Три нові звуки додано. Старі сигнали збережено.';
+
 const alertSelect=document.getElementById('threatSelect');
 alertSelect.addEventListener('change',()=>{
   document.getElementById('startBtn').textContent=isClearNotice(alertSelect.value)?'▶ Оголосити відбій':'Запустити';
