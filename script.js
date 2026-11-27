@@ -21,7 +21,7 @@ let activeAlerts=loadSavedAlerts('uaAlertSim');
 const markers={},zones={};
 const searchInput=document.getElementById('placeSearch');
 
-function kindLabel(k){return ruById[k]?.label||{air:'Повітряна тривога',yellow:'Жовта повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару',artillery:'Артилерійський обстріл',street1:'Вуличні бої',speaker:'Сигнал гучномовця',allclear:'Відбій тривоги',chemical:'Хімічна небезпека',radiation:'Радіаційна небезпека',nuclear:'Ядерна небезпека'}[k]||k}
+function kindLabel(k){return ruById[k]?.label||{air:'Повітряна тривога',yellow:'Жовта повітряна тривога',drone:'Загроза БпЛА / Shahed',missile:'Ракетна загроза',strike:'Загроза ракетного удару',artillery:'Артилерійський обстріл',artillery_clear:'Відбій артилерійського обстрілу',air_comedy:'Повітряна тривога — жартівливий запис',clear_calm:'Відбій повітряної тривоги — спокійний голос',clear_music:'Відбій повітряної тривоги — музична версія',street1:'Вуличні бої',speaker:'Сигнал гучномовця',allclear:'Відбій тривоги',chemical:'Хімічна небезпека',radiation:'Радіаційна небезпека',nuclear:'Ядерна небезпека'}[k]||k}
 function colorFor(k){const type=ruById[k]?.sound||k;return (type==='drone'||type==='yellow')?'#ffd21f':type==='chemical'?'#a78bfa':type==='radiation'?'#fbbf24':type==='nuclear'?'#fb923c':'#ef3340'}
 
 const ruScenarios=[["rad","☢️ Радиационная опасность","⚠️ Загрози","radiation","Радіаційна перевірка з мемним звуком."],["chem","☣️ Химическая угроза","⚠️ Загрози","chemical","Підозрілий запах пропаганди."],["street","⚔️ Уличные бои — тип 1","⚠️ Загрози","street1","Відповідний звук із відео."],["air","🚨 Воздушная тревога","⚠️ Загрози","air","Тренувальний сигнал повітряної тривоги."],["yellow","🟡 Жёлтая воздушная тревога","⚠️ Загрози","yellow","Окремий запис із надісланого відео."],["artillery","💥 Артиллерийский обстрел","⚠️ Загрози","artillery","Оригінальний запис із відео."],["speaker","📢 Сигнал громкоговорителя","⚠️ Загрози","speaker","Окремий сигнал гучномовця, не відбій."],["nuclear","☢️ Ядерная угроза","⚠️ Загрози","nuclear","Фантастичний сценарій — не реальна загроза."],["oreshnik","🚀 Угроза ракеты «Орешник»","⚠️ Загрози","missile","Горішки для білочки закінчилися 🌰"],["wakeup_intro","👻 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Бандера проснулся и вышел на прогулку!"],["wakeup","💀 Угроза пробуждения Бандеры!","👻 Бандера й меми","ghost","Мемне пробудження легенди."],["kremlin","👻 Призрак Бандеры замечен в Кремле!","👻 Бандера й меми","ghost","Привид питає, де тут вихід."],["district","🚨 Внимание! Бандера в вашем районе!","👻 Бандера й меми","alarm","Місцевий мемний патруль на зв'язку."],["apocalypse","☠️ Бандеровский апокалипсис!","👻 Бандера й меми","alarm","Кінець спокою для пельменів."],["banderization","🇺🇦 Массовая бандеризация России!","👻 Бандера й меми","tune","Усе раптом заговорило українською."],["tridents","🔱 Нашествие украинских тризубов!","👻 Бандера й меми","tune","Тризуби на мемному радарі."],["resurrection","🧟 Восстание бандеровцев!","👻 Бандера й меми","ghost","Зомбі принесли паляницю."],["nightmare","👹 Ночной кошмар Бандеры!","👻 Бандера й меми","ghost","Будильник не допомагає."],["wifi","📡 Бандера взломал российский Wi-Fi!","👻 Бандера й меми","radio","Пароль Wi-Fi: паляниця."],["ufo","🛸 Бандеровские НЛО над Москвой!","👻 Бандера й меми","ufo","НЛО просять борщ."],["fridge","🥟 Бандера захватил холодильник!","👻 Бандера й меми","boing","Пельмені в паніці."],["tv","📺 Бандера появился во всех телевизорах!","👻 Бандера й меми","radio","Телевізор змінив канал на український."],["sleepless","👻 Призрак Бандеры не спит!","👻 Бандера й меми","ghost","Привид на нічній зміні."],["door","🔔 Бандера звонит в дверь!","👻 Бандера й меми","bell","Дзвінок: відчиніть для мемів."],["pelmeni","💀 Бандера объявил охоту на пельмени!","👻 Бандера й меми","boing","Пельмені пішли в укриття."],["geese","🪿 Вторжение украинских боевых гусей!","🪿 Українські меми","goose","Га-га-га, повітряний патруль."],["mosquito","🦟 Атака украинских боевых комаров!","🪿 Українські меми","buzz","Мемні комарі в ефірі."],["witch","🧙‍♀️ Конотопская ведьма приближается!","🪿 Українські меми","magic","Мітла заряджена борщем."],["pickles","🥒 Атака летающих банок с огурцами!","🪿 Українські меми","boing","Огірки взяли курс на холодильник."],["tractor","🚜 Вторжение украинских тракторных войск!","🪿 Українські меми","march","Трактор шукає наступний мем."],["patron","🐕 Пёс Патрон объявил проверку!","🪿 Українські меми","bell","Патрон перевіряє запаси смаколиків."],["cotton","🌸 Бавовняная тревога!","🪿 Українські меми","pop","Бавовна у мемному прогнозі."],["palianytsia","🍞 Паляниця-апокалипсис!","🪿 Українські меми","boing","Складно вимовити — легко запам'ятати."],["moskva_ship","🛳️ Крейсер «Москва» снова пропал!","🪿 Українські меми","pop","Крейсер пішов шукати Wi-Fi."],["chornobaivka","🔁 Чернобаевская аномалия!","🪿 Українські меми","tune","Це вже було, знову повторимо?"],["cats","🐈 Вторжение бандеровских котов!","🪿 Українські меми","goose","Мяу-патруль на службі."],["watermelons","🍉 Нашествие херсонских арбузов!","🪿 Українські меми","boing","Кавуни зайняли всі кошики."],["borsch_apocalypse","🥣 Борщевой апокалипсис!","🪿 Українські меми","boing","Борщ переміг кетчуп."],["ducks","🦆 Секретные украинские боевые утки!","🪿 Українські меми","goose","Кря-кря, секретна місія."],["pigeons","🐦 Украинские голуби захватили небо!","🪿 Українські меми","chirp","Голуби вийшли на зв'язок."],["run","🚨 Мамулечка, надо сваливать!","🥟 Побутові жарти","alarm","Мемний будильник працює."],["varenyky","🥟 Украинские вареники захватывают Россию!","🥟 Побутові жарти","boing","Вареники оголосили день сметани."],["onion","🧅 Луковая атака! Все плачут!","🥟 Побутові жарти","pop","Цибуля зробила свою справу."],["borsch_pelmeni","🍲 Борщ уничтожил все пельмени!","🥟 Побутові жарти","boing","Кулінарний фінал."],["ukr_tv","📺 Телевизор внезапно заговорил по-украински!","🥟 Побутові жарти","radio","Канал обрав українську мову."],["red_square","🪿 Гуси захватили Красную площадь!","🥟 Побутові жарти","goose","Гуси попросили послухати ґелґотання."],["sunflowers","🌻 Украинские подсолнухи наступают!","🥟 Побутові жарти","magic","Соняшники розквітають у мемі."],["radio_hymn","🎶 Все радиоприёмники включили украинский гимн!","🥟 Побутові жарти","tune","Мемний сигнал: без відтворення реального гімну."],["potato","🥔 Картофельная катастрофа!","🥟 Побутові жарти","boing","Картопля втекла з борщу."],["salo","🐷 Свинячья паника! Сало объявило мобилизацию!","🥟 Побутові жарти","march","Сало збирає команду бутербродів."],["aliens","👽 Инопланетяне требуют украинский борщ!","🥟 Побутові жарти","ufo","Прибульці замовили подвійну порцію."],["matryoshka","🎭 Российские матрёшки превратились в вышиванки!","🥟 Побутові жарти","magic","Матрьошки оновили гардероб."],["broom","🧹 Конотопские ведьмы устроили парад мётел!","🥟 Побутові жарти","magic","Відкрито сезон мітлиних перегонів."],["god","😇 Приход Бога — небесная тревога!","🎭 Мемні події","divine","Урочистий мемний сигнал із дзвонами."]].map(([id,label,group,sound,caption])=>({id:'ru_'+id,label,group,sound,caption}));
@@ -78,8 +78,18 @@ const recordedThreatAudio={
   street1:'audio/clip-20261126-v5-street.mp3',
   chemical:'audio/clip-20261126-v5-chemical.mp3',
   radiation:'audio/clip-20261126-v5-radiation.mp3',
-  speaker:'audio/clip-20261126-v5-speaker.mp3'
+  speaker:'audio/clip-20261126-v5-speaker.mp3',
+  artillery_clear:'audio/clip-20261126-v5-artillery.mp3',
+  air_comedy:'audio/new-20261127-air-comedy.mp3',
+  clear_calm:'audio/new-20261127-clear-calm.mp3',
+  clear_music:'audio/new-20261127-clear-music.mp3'
 };
+const recordingSegments={
+  artillery:{start:0.39,end:7.87},
+  artillery_clear:{start:8.12,end:15.30}
+};
+const optionalRecordings=['air_comedy','clear_calm','clear_music'];
+function isClearNotice(k){return k==='artillery_clear'||k==='clear_calm'||k==='clear_music'}
 let syntheticContext=null;
 let syntheticOscillators=[];
 let audioGeneration=0;
@@ -93,7 +103,7 @@ function stopSynthetic(){
 function stopAudio(){
   audioGeneration++;
   const player=document.getElementById('uploadedThreatSound');
-  if(player){if(pendingMemeEndedHandler){player.removeEventListener('ended',pendingMemeEndedHandler);pendingMemeEndedHandler=null;}player.onerror=null;player.onended=null;player.pause();try{player.currentTime=0}catch(e){}}
+  if(player){if(pendingMemeEndedHandler){player.removeEventListener('ended',pendingMemeEndedHandler);pendingMemeEndedHandler=null;}player.onerror=null;player.onended=null;player.ontimeupdate=null;player.onloadedmetadata=null;player.pause();try{player.currentTime=0}catch(e){}}
   const status=document.getElementById('audioStatus');if(status)status.textContent='';
   stopSynthetic();
   if('speechSynthesis' in window){try{window.speechSynthesis.cancel()}catch(e){}}
@@ -372,6 +382,20 @@ function playMediaWithFallback(audio,key){
   audio.playbackRate=1;
   const token=audioGeneration;
   const status=document.getElementById('audioStatus');
+  const segment=recordingSegments[key];
+  audio.ontimeupdate=null;
+  audio.onloadedmetadata=null;
+  if(segment){
+    const seek=()=>{if(token===audioGeneration)try{audio.currentTime=segment.start}catch(e){}};
+    if(audio.readyState>=1)seek();else audio.onloadedmetadata=seek;
+    audio.ontimeupdate=()=>{
+      if(token!==audioGeneration)return;
+      if(audio.currentTime>=segment.end-0.04){
+        audio.ontimeupdate=null;audio.pause();
+        audio.dispatchEvent(new Event('ended'));
+      }
+    };
+  }
   audio.onerror=()=>{
     if(token!==audioGeneration)return;
     if(status)status.textContent='Не вдалося завантажити звук. Перевір інтернет та онови сторінку.';
@@ -435,12 +459,38 @@ function playThreatSet(kinds){
     setTimeout(()=>{if(token===audioGeneration)speakMemeScenarios(memes)},2200);
   }
 }
-function playClear(){
+function playClear(forType=''){
   stopAudio();
+  if(forType==='artillery'){
+    playRecordedAudio('artillery_clear');
+    return;
+  }
   playDistinctSignal('allclear');
   const status=document.getElementById('audioStatus');
-  if(status)status.textContent='✅ Відбій: окремий сигнал завершення (не запис із надісланих відео).';
+  if(status)status.textContent='✅ Відбій: окремий сигнал завершення.';
 }
+async function checkOptionalRecordings(){
+  // Keep new choices unavailable until their actual MP3 files are on GitHub Pages.
+  for(const key of optionalRecordings){
+    const option=document.querySelector('option[value="'+key+'"]');
+    if(!option)continue;
+    option.disabled=true;
+    try{
+      const result=await fetch(recordedThreatAudio[key],{method:'HEAD',cache:'no-store'});
+      option.disabled=!result.ok;
+    }catch(e){option.disabled=true;}
+  }
+  const hint=document.getElementById('newSoundHint');
+  if(hint){
+    const available=optionalRecordings.filter(k=>!document.querySelector('option[value="'+k+'"]')?.disabled).length;
+    hint.textContent=available===3?'✅ Додаткові записи доступні. Старі звуки збережені.':'Додаткові записи стануть доступними після завантаження MP3. Старі звуки працюють.';
+  }
+}
+checkOptionalRecordings();
+const alertSelect=document.getElementById('threatSelect');
+alertSelect.addEventListener('change',()=>{
+  document.getElementById('startBtn').textContent=isClearNotice(alertSelect.value)?'▶ Оголосити відбій':'Запустити';
+});
 document.getElementById('volumeRange').oninput=e=>{
   document.getElementById('volumeValue').textContent=e.target.value+'%';
   const player=document.getElementById('uploadedThreatSound');
@@ -874,6 +924,13 @@ async function startAlert(kindsOverride=null,forcedScope=null){
     : [document.getElementById('threatSelect').value];
   if(!kinds.length){alert('Спочатку вибери хоча б один сценарій.');return}
   if(currentCountry==='ua'&&kinds.some(k=>ruById[k])){alert('Мемні сценарії доступні лише для карти Росії.');return}
+  if(kinds.length===1&&isClearNotice(kinds[0])){
+    const areaKey=scope==='country'?(currentCountry+':country'):keyOf(place);
+    if(activeAlerts[areaKey])stopOne(areaKey,false);
+    primeAlarmAudio();
+    playThreat(kinds[0]);
+    return;
+  }
   // A tap/click grants audio permission. Do not wait for an asynchronous map
   // boundary request, otherwise Chrome on Android may silently block playback.
   const launchId=++pendingAlertLaunch;
@@ -929,7 +986,7 @@ function stopOne(k,play=true){
   clearMemeFlights();
   delete activeAlerts[k];removeZone(k);
   if(a.scope!=='country')refreshMarker(k,a.place);
-  save();if(play)playClear();
+  save();if(play)playClear((a.kinds||[a.kind]).some(x=>soundTypeFor(x)==='artillery')?'artillery':'');
 }
 document.getElementById('startBtn').onclick=()=>startAlert();
 document.getElementById('stopBtn').onclick=()=>{

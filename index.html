@@ -48,7 +48,7 @@
   }
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=20261104-memevoice3">
+  <link rel="stylesheet" href="style.css?v=20261127-audio-v6">
   <link rel="stylesheet" href="flight-demo.css?v=20261110-game3">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-GNNV6HMWPH"></script>
@@ -165,7 +165,16 @@
         <option value="radiation">Радіаційна небезпека</option>
         <option value="nuclear">Ядерна небезпека</option>
         <option value="speaker">Сигнал гучномовця</option>
+        <optgroup label="🔔 Окремі повідомлення про відбій">
+          <option value="artillery_clear">Відбій артилерійського обстрілу (окремий запис)</option>
+        </optgroup>
+        <optgroup label="🎙️ Нові додаткові голосові записи">
+          <option value="air_comedy" disabled>Повітряна тривога — жартівливе оголошення</option>
+          <option value="clear_calm" disabled>Відбій тривоги — спокійний голос</option>
+          <option value="clear_music" disabled>Відбій тривоги — музична версія</option>
+        </optgroup>
       </select>
+      <p id="newSoundHint" class="small">Додаткові записи завантажуються...</p>
       <p id="audioStatus" class="small" role="status" aria-live="polite"></p>
 
       <label>Масштаб</label>
@@ -306,7 +315,7 @@
 <audio id="uploadedThreatSound" src="audio/clip-20261126-v5-air.mp3" preload="auto" playsinline></audio>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="script.js?v=20261126-audio-v5"></script>
+<script src="script.js?v=20261127-audio-v6"></script>
 <script src="flight-demo.js?v=20261110-meme-voice5"></script>
 </body>
 </html>

@@ -639,3 +639,10 @@ button:hover{
   .meme-landing-pulse{animation-duration:.05s}
   .meme-voice-card{animation:none}
 }
+
+/* Separate warning and all-clear notices; smaller, readable inline audio status. */
+#newSoundHint{margin:7px 2px;color:#9fcaff;line-height:1.45;font-size:11px}
+#threatSelect optgroup{background:#172538;color:#a9d5ff;font-weight:800}
+#threatSelect option{background:#111c2b;color:#f4f8ff;padding:6px}
+#threatSelect option:disabled{color:#8a99aa}
+#audioStatus:not(:empty){border-left:3px solid #5da4f5;padding:8px 10px;margin:9px 0 2px;background:rgba(50,110,190,.11);border-radius:5px}
